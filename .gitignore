@@ -1,0 +1,7 @@
+news_trade/__pycache__
+.vscode
+logs
+cookies.json
+cookies_raw.json
+config/apprise.yaml
+config/config_remote.yaml
