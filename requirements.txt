@@ -1,0 +1,7 @@
+apprise==1.9.3
+twikit==1.7.6
+playwright==1.51.0
+nested_lookup==0.2.25
+jmespath==1.0.1
+parsel==1.10.0
+schedule==1.1.0
