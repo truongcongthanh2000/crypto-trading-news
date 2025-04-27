@@ -1,7 +1,6 @@
 from twikit import Client, TooManyRequests
 from .logger import Logger
 from .config import Config
-import time
 
 class Twitter:
     def __init__(self, config: Config, logger: Logger):
