@@ -4,18 +4,18 @@ from .scheduler import SafeScheduler
 from .twitter import Twitter
 from .config import Config
 from .threads import Threads
-import json
 from .notification import Message
+from datetime import datetime
 
 def main():
     logger = Logger("news_trade_server")
-    logger.info(Message("Starting"), True)
+    logger.info(Message(title = f'News Trade - Time: {datetime.now()}', body='Starting'), True)
 
     config = Config()
 
     threads = Threads(config, logger)
-    threads.scrape_user_posts()
     schedule = SafeScheduler(logger)
+    schedule.every(config.THREADS_SCRAPE_SLEEP_TIME).seconds.do(threads.scrape_user_posts).tag("threads_scrape_news")
     try:
         while True:
             schedule.run_pending()

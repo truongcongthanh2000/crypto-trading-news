@@ -129,7 +129,8 @@ class Threads:
                 body = f'{thread['text']}\n\n[Link: {thread["url"]}]({thread["url"]})',
                 title = f'Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'])}'
             ))
-        self.map_last_timestamp[username] = max_timestamp
+        if max_timestamp > 0:
+            self.map_last_timestamp[username] = max_timestamp
         return threads_post
     
     def scrape_user_posts(self):

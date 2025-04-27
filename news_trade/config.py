@@ -8,3 +8,4 @@ class Config:
         self.TWITTER_PASSWORD = config["twitter"]["password"]
         self.THREADS_LIST_USERNAME = config["threads"]["list_username"]
         self.THREADS_SLA = config["threads"]["sla"]
+        self.THREADS_SCRAPE_SLEEP_TIME = config["threads"]["scrape_sleep_time"]
