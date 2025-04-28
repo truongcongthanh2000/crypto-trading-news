@@ -6,11 +6,12 @@ from .config import Config
 from .threads import Threads
 from .notification import Message
 from datetime import datetime
+import pytz
 
 def main():
     config = Config()
     logger = Logger(config, "news_trade_server")
-    logger.info(Message(title = f'News Trade - Time: {datetime.now()}', body='Starting'), True)
+    logger.info(Message(title = f'News Trade - Time: {datetime.now(tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body='Starting'), True)
 
 
     threads = Threads(config, logger)

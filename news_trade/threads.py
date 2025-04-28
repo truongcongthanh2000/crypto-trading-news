@@ -10,6 +10,7 @@ from .logger import Logger
 from .config import Config
 from .notification import Message
 from datetime import datetime
+import pytz
 
 class Threads:
     """
@@ -127,7 +128,7 @@ class Threads:
             max_timestamp = max(max_timestamp, thread['published_on'])
             threads_post.append(Message(
                 body = f'{thread['text']}\n\n[Link: {thread["url"]}]({thread["url"]})',
-                title = f'Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'])}'
+                title = f'Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}'
             ))
         if max_timestamp > 0:
             self.map_last_timestamp[username] = max_timestamp
