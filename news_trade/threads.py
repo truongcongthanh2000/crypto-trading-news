@@ -16,15 +16,24 @@ import sys
 import re
 
 def remove_redundant_spaces(text: str):
-    # This pattern finds lines that start with optional spaces, a '|', then a lot of spaces, then another '|', ignoring anything else
-    def replacer(match):
-        content = match.group(1).strip()
-        return f"|{content}|"
+    lines = text.split('\n')
+    cleaned_lines = []
 
-    # Replace patterns like "|    content    |" into "|content|", preserving \n
-    text = re.sub(r'\|([^\|]*)\|', replacer, text)
-    
-    return text
+    for line in lines:
+        # Check if it's a progress line
+        if re.match(r'^\|\s*.*?\s*\|.*$', line):
+            if '100%' in line:
+                # Keep the 100% progress line, but remove redundant spaces
+                line = re.sub(r'\|\s*', '|', line)  # Remove spaces after first |
+                line = re.sub(r'\s*\|', '|', line)  # Remove spaces before second |
+                cleaned_lines.append(line)
+            else:
+                # Skip all other progress lines (0%-90%)
+                continue
+        else:
+            cleaned_lines.append(line)
+
+    return '\n'.join(cleaned_lines)
 class Threads:
     """
     A basic interface for interacting with Threads.
