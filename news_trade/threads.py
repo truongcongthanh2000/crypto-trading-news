@@ -80,7 +80,7 @@ class Threads:
         with sync_playwright() as pw:
             # start Playwright browser
             executable_path = None
-            if self.config.CHROMIUM_EXECUTABLE_PATH != None > 0:
+            if self.config.CHROMIUM_EXECUTABLE_PATH != None:
                 executable_path = self.config.CHROMIUM_EXECUTABLE_PATH
             browser = pw.chromium.launch(executable_path=executable_path, chromium_sandbox=False)
             context = browser.new_context(viewport={"width": 1920, "height": 1080})
