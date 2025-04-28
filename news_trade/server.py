@@ -8,10 +8,10 @@ from .notification import Message
 from datetime import datetime
 
 def main():
-    logger = Logger("news_trade_server")
+    config = Config()
+    logger = Logger(config, "news_trade_server")
     logger.info(Message(title = f'News Trade - Time: {datetime.now()}', body='Starting'), True)
 
-    config = Config()
 
     threads = Threads(config, logger)
     schedule = SafeScheduler(logger)

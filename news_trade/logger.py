@@ -1,13 +1,13 @@
 import logging.handlers
 
 from .notification import NotificationHandler
-
+from .config import Config
 
 class Logger:
     Logger = None
     NotificationHandler = None
 
-    def __init__(self, logging_service="crypto_trading", enable_notifications=True):
+    def __init__(self, config: Config, logging_service="crypto_trading", enable_notifications=True):
         # Logger setup
         self.Logger = logging.getLogger("apprise")
         self.Logger.setLevel(logging.DEBUG)
@@ -26,7 +26,7 @@ class Logger:
         self.Logger.addHandler(ch)
 
         # notification handler
-        self.NotificationHandler = NotificationHandler(enable_notifications)
+        self.NotificationHandler = NotificationHandler(config, enable_notifications)
 
     def log(self, message, level="info", notification=True):
         if level == "info":

@@ -4,7 +4,7 @@ from os import path
 
 import apprise
 import json
-
+from .config import Config
 
 APPRISE_CONFIG_PATH = "config/apprise.yaml"
 
@@ -20,14 +20,16 @@ class Message:
         return json.dumps(payload)
 
 class NotificationHandler:
-    def __init__(self, enabled=True):
-        if enabled and path.exists(APPRISE_CONFIG_PATH):
+    def __init__(self, cfg: Config, enabled=True):
+        if enabled:
             self.apobj = apprise.Apprise()
-            config = apprise.AppriseConfig()
-            config.add(APPRISE_CONFIG_PATH)
-            self.apobj.add(config)
-            self.apobj.details
-            self.apobj.notify_format = apprise.NotifyFormat.MARKDOWN
+            if path.exists(APPRISE_CONFIG_PATH):
+                config = apprise.AppriseConfig()
+                config.add(APPRISE_CONFIG_PATH)
+                self.apobj.add(config)
+            else:
+                self.apobj = apprise.Apprise()
+                self.apobj.add(cfg.TELEGRAM_NOTIFY_URL, tag='telegram')
             self.queue = queue.Queue()
             self.start_worker()
             self.enabled = True

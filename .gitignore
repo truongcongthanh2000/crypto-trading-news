@@ -3,5 +3,5 @@ news_trade/__pycache__
 logs/news_trade_server.log
 cookies.json
 cookies_raw.json
-# config/apprise.yaml
+config/apprise.yaml
 config/config_remote.yaml
