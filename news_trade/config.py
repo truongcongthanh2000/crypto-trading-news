@@ -1,12 +1,8 @@
 import yaml
 import os
-from os import path
-
-CONFIG_REMOTE_PATH = path.join(path.dirname(path.dirname(path.abspath(__file__))), "config/config_remote.yaml")
-
 class Config:
     def __init__(self):
-        with open(CONFIG_REMOTE_PATH, "r", encoding="utf-8") as f:
+        with open("config/config_remote.yaml", "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
         self.TWITTER_USERNAME = os.environ.get("TWITTER_USERNAME") or config["twitter"]["username"]
         self.TWITTER_EMAIL = os.environ.get("TWITTER_EMAIL") or config["twitter"]["email"]
