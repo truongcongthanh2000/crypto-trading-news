@@ -1,6 +1,6 @@
 news_trade/__pycache__
 .vscode
-logs
+logs/news_trade_server.log
 cookies.json
 cookies_raw.json
 config/apprise.yaml
