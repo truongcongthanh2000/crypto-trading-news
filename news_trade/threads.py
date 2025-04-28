@@ -84,7 +84,9 @@ class Threads:
         if process.returncode != 0:
             self.logger.error(Message(title=f'Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stderr.decode('utf-8')}'), True)
         else:
-            self.logger.info(Message(title=f'Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stdout.decode('utf-8')}' or 'Successful'), True)
+            msg = stdout.decode('utf-8') or 'Successful'
+            msg = msg.replace('\u25a0', '')
+            self.logger.info(Message(title=f'Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=msg), True)
     
         """Scrape Threads profile and their recent posts from a given URL"""
         with sync_playwright() as pw:
