@@ -13,7 +13,19 @@ from datetime import datetime
 import pytz
 import subprocess
 import sys
+import re
 
+def remove_redundant_spaces(text: str):
+    """
+    Removes redundant spaces between '|' characters in a string.
+
+    Args:
+        text: The input string.
+
+    Returns:
+        The string with redundant spaces removed.
+    """
+    return re.sub(r'\s*\|\s*', '|', text.strip())
 class Threads:
     """
     A basic interface for interacting with Threads.
@@ -24,6 +36,17 @@ class Threads:
         self.logger = logger
         self.map_last_timestamp = {}
 
+        command = [sys.executable, "-m", "playwright", "install", "chromium"]
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            self.logger.error(Message(title=f'Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stderr.decode('utf-8')}'), True)
+        else:
+            msg = stdout.decode('utf-8') or 'Successful'
+            msg = msg.replace('\u25a0', '')
+            msg = remove_redundant_spaces(msg)
+            self.logger.info(Message(title=f'Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=msg), True)
+    
     # Note: we'll also be using parse_thread function we wrote earlier:
 
     def parse_thread(self, data: Dict) -> Dict:
@@ -78,16 +101,6 @@ class Threads:
 
 
     def scrape_profile(self, username: str) -> dict:
-        command = [sys.executable, "-m", "playwright", "install", "chromium"]
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        if process.returncode != 0:
-            self.logger.error(Message(title=f'Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stderr.decode('utf-8')}'), True)
-        else:
-            msg = stdout.decode('utf-8') or 'Successful'
-            msg = msg.replace('\u25a0', '')
-            self.logger.info(Message(title=f'Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=msg), True)
-    
         """Scrape Threads profile and their recent posts from a given URL"""
         with sync_playwright() as pw:
             # start Playwright browser
