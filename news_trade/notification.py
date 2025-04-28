@@ -5,8 +5,7 @@ from os import path
 import apprise
 import json
 
-BASE_DIR = path.dirname(path.dirname(path.abspath(__file__)))
-APPRISE_CONFIG_PATH = path.join("config/apprise.yaml")
+APPRISE_CONFIG_PATH = path.join(path.dirname(path.dirname(path.abspath(__file__))), "config/apprise.yaml")
 
 class Message:
     def __init__(self, body: str, title = 'News Trade'):
