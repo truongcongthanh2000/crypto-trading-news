@@ -82,9 +82,9 @@ class Threads:
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         if process.returncode != 0:
-            self.logger.error(f"Error installing Playwright:\n{stderr.decode('utf-8')}", True)
+            self.logger.error(Message(title=f'Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stderr.decode('utf-8')}'), True)
         else:
-            self.logger.info(f"Playwright installation successful:\n{stdout.decode('utf-8')}", True)
+            self.logger.info(Message(title=f'Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stdout.decode('utf-8')}' or 'Successful'), True)
     
         """Scrape Threads profile and their recent posts from a given URL"""
         with sync_playwright() as pw:

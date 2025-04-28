@@ -11,7 +11,7 @@ import pytz
 def main():
     config = Config()
     logger = Logger(config, "news_trade_server")
-    logger.info(Message(title = f'News Trade - Time: {datetime.now(tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body='Starting'), True)
+    logger.info(Message(title = f'News Trade - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body='Starting'), True)
 
 
     threads = Threads(config, logger)
