@@ -23,6 +23,7 @@ This bot collects publicly available information. The developers **ARE NOT RESPO
 
 ## Contributing
 
+
 ## License (If Applicable)
 
 *(This section would specify the license under which the bot is distributed.)*
