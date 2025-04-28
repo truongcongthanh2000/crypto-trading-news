@@ -24,3 +24,4 @@ class Config:
         self.THREADS_SLA = int(os.environ.get("THREADS_SLA") or config["threads"]["sla"])
         self.THREADS_SCRAPE_SLEEP_TIME = int(os.environ.get("THREADS_SCRAPE_SLEEP_TIME") or config["threads"]["scrape_sleep_time"])
         self.TELEGRAM_NOTIFY_URL = os.environ.get("TELEGRAM_NOTIFY_URL")
+        self.CHROMIUM_EXECUTABLE_PATH = os.environ.get("CHROMIUM_EXECUTABLE_PATH")
