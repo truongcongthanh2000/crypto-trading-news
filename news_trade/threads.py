@@ -11,6 +11,8 @@ from .config import Config
 from .notification import Message
 from datetime import datetime
 import pytz
+import subprocess
+import sys
 
 class Threads:
     """
@@ -76,13 +78,18 @@ class Threads:
 
 
     def scrape_profile(self, username: str) -> dict:
+        command = [sys.executable, "-m", "playwright", "install", "chromium"]
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            self.logger.error(f"Error installing Playwright:\n{stderr.decode('utf-8')}", True)
+        else:
+            self.logger.info(f"Playwright installation successful:\n{stdout.decode('utf-8')}", True)
+    
         """Scrape Threads profile and their recent posts from a given URL"""
         with sync_playwright() as pw:
             # start Playwright browser
-            executable_path = None
-            if self.config.CHROMIUM_EXECUTABLE_PATH != None:
-                executable_path = self.config.CHROMIUM_EXECUTABLE_PATH
-            browser = pw.chromium.launch(executable_path=executable_path, chromium_sandbox=False)
+            browser = pw.chromium.launch(chromium_sandbox=False)
             context = browser.new_context(viewport={"width": 1920, "height": 1080})
             page = context.new_page()
             url = f'{self.BASE_URL}/@{username}'
