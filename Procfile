@@ -1,1 +1,1 @@
-bot: python3 -m news_trade
+bot: python -m news_trade
