@@ -16,16 +16,15 @@ import sys
 import re
 
 def remove_redundant_spaces(text: str):
-    """
-    Removes redundant spaces between '|' characters in a string.
+    # This pattern finds lines that start with optional spaces, a '|', then a lot of spaces, then another '|', ignoring anything else
+    def replacer(match):
+        content = match.group(1).strip()
+        return f"|{content}|"
 
-    Args:
-        text: The input string.
-
-    Returns:
-        The string with redundant spaces removed.
-    """
-    return re.sub(r'\s*\|\s*', '|', text.strip())
+    # Replace patterns like "|    content    |" into "|content|", preserving \n
+    text = re.sub(r'\|([^\|]*)\|', replacer, text)
+    
+    return text
 class Threads:
     """
     A basic interface for interacting with Threads.
