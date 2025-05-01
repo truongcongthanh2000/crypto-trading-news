@@ -14,15 +14,10 @@ def main():
     logger.info(Message(title = f"News Trade - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body='Starting'), True)
 
     twitter = Twitter(config, logger)
-    tweets = twitter.get_tweets('python')
-    for tweet in tweets:
-        print(
-            tweet.user.name,
-            tweet.text,
-            tweet.created_at
-        )
     threads = Threads(config, logger)
     schedule = SafeScheduler(logger)
+    schedule.every(config.THREADS_SCRAPE_SLEEP_TIME).seconds.do(threads.scrape_user_posts).tag("threads_scrape_news")
+    schedule.every(config.TWITTER_SCRAPE_SLEEP_TIME).seconds.do(twitter.scrape_user_tweets).tag("twitter_scrape_news")
     try:
         while True:
             schedule.run_pending()

@@ -1,19 +1,59 @@
-from twikit import Client, TooManyRequests
+from twikit import Client, TooManyRequests, Tweet
+from twikit.utils import Result
 from .logger import Logger
 from .config import Config
 import asyncio
-
+from .notification import Message
+import time
+import pytz
+from datetime import datetime
+from random import randint
 class Twitter:
     def __init__(self, config: Config, logger: Logger):
         self.config = config
         self.logger = logger
         self.client = Client(language='en-US')
         self.client.set_cookies(config.TWITTER_COOKIES_DICT)
+        self.map_timestamp_by_user = {} 
 
-    def get_tweets(self, query: str):
-        self.logger.info(f"get tweets with query: {query}")
+    def filter_tweets(self, tweets: Result[Tweet]) -> list[Message]:
+        twitter_tweets = []
+        time_now = int(time.time())
+        update_max_timestamp = {}
+        for tweet in tweets:
+            tweet_timestamp = int(tweet.created_at_datetime.timestamp())
+            user_id = tweet.user.id
+            user_name = tweet.user.name
+            user_screen_name = tweet.user.screen_name
+            url = f"https://x.com/{user_screen_name}/status/{tweet.id}"
+            if time_now - tweet_timestamp >= self.config.TWITTER_SLA:
+                continue
+            if user_id in self.map_timestamp_by_user and tweet_timestamp <= self.map_timestamp_by_user[user_id]:
+                continue
+            if user_id in update_max_timestamp:
+                update_max_timestamp[user_id] = max(update_max_timestamp[user_id], tweet_timestamp)
+            else:
+                update_max_timestamp[user_id] = tweet_timestamp
+            twitter_tweets.append(Message(
+                title= f"Twitter - {user_name} - Time: {datetime.fromtimestamp(tweet_timestamp, tz=pytz.timezone('Asia/Ho_Chi_Minh'))}",
+                body= f"{tweet.full_text}\n\n[Link: {url}]({url})"
+            ))
+        for user_id in update_max_timestamp:
+            self.map_timestamp_by_user[user_id] = update_max_timestamp[user_id]
+        return twitter_tweets
+        
+
+    def get_tweets(self, query: str) -> list[Message]:
         loop = asyncio.get_event_loop()
         tweets = loop.run_until_complete(self.client.search_tweet(query, product='Latest'))
-        return tweets
+        return self.filter_tweets(tweets)
     
+    def scrape_user_tweets(self):
+        list_query = self.config.TWITTER_LIST_QUERY
+        tweets = []
+        for query in list_query:
+            tweets.extend(self.get_tweets(query))
+            time.sleep(randint(5, 10))
+        for tweet in tweets:
+            self.logger.info(tweet, True)
 

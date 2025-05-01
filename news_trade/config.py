@@ -7,6 +7,7 @@ class Config:
             "twitter": {
                 "cookies": "{}",
                 "scrape_sleep_time": 600,
+                "sla": "86400",
                 "list_query": []
             },
             "threads": {
@@ -27,3 +28,4 @@ class Config:
         self.TWITTER_COOKIES_DICT = json.loads(os.environ.get("TWITTER_COOKIES") or config["twitter"]["cookies"])
         self.TWITTER_SCRAPE_SLEEP_TIME = int(os.environ.get("TWITTER_SCRAPE_SLEEP_TIME") or config["twitter"]["scrape_sleep_time"])
         self.TWITTER_LIST_QUERY = [query.strip() for query in os.environ.get("TWITTER_LIST_QUERY", "").split() if query.strip()] or config["twitter"]["list_query"]
+        self.TWITTER_SLA = int(os.environ.get("TWITTER_SLA") or config["twitter"]["sla"])
