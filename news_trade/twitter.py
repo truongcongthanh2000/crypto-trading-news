@@ -8,6 +8,8 @@ import time
 import pytz
 from datetime import datetime
 from random import randint
+import apprise
+
 class Twitter:
     def __init__(self, config: Config, logger: Logger):
         self.config = config
@@ -45,7 +47,15 @@ class Twitter:
 
     def get_tweets(self, query: str) -> list[Message]:
         loop = asyncio.get_event_loop()
-        tweets = loop.run_until_complete(self.client.search_tweet(query, product='Latest'))
+        try:
+            tweets = loop.run_until_complete(self.client.search_tweet(query, product='Latest'))
+        except Exception as err:
+            self.logger.error(Message(
+                title=f"Error Twitter.get_tweets - {query}",
+                body=f"Error: {err=}", 
+                format=apprise.NotifyFormat.TEXT
+            ), True)
+            tweets = [] 
         return self.filter_tweets(tweets)
     
     def scrape_user_tweets(self):
