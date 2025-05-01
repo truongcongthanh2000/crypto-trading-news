@@ -23,7 +23,6 @@ class Config:
             with open("config/config_remote.yaml", "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
         self.TELEGRAM_NOTIFY_URL = os.environ.get("TELEGRAM_NOTIFY_URL")
-        self.CHROMIUM_EXECUTABLE_PATH = os.environ.get("CHROMIUM_EXECUTABLE_PATH")
 
         self.THREADS_LIST_USERNAME = [thread.strip() for thread in os.environ.get("THREADS_LIST_USERNAME", "").split() if thread.strip()] or config["threads"]["list_username"]
         self.THREADS_SLA = int(os.environ.get("THREADS_SLA") or config["threads"]["sla"])
