@@ -53,7 +53,7 @@ class Threads:
             msg = stdout.decode('utf-8') or 'Successful'
             msg = msg.replace('\u25a0', '')
             msg = remove_redundant_spaces(msg)
-            self.logger.info(Message(title=f"Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=msg), True)
+            self.logger.info(Message(title=f"Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=msg), False)
     
     # Note: we'll also be using parse_thread function we wrote earlier:
 

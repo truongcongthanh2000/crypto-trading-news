@@ -9,13 +9,15 @@ from .config import Config
 APPRISE_CONFIG_PATH = "config/apprise.yaml"
 
 class Message:
-    def __init__(self, body: str, title = 'News Trade'):
+    def __init__(self, body: str, title = 'News Trade', format = apprise.NotifyFormat.MARKDOWN):
         self.title = title
         self.body = body
+        self.format = format
     def __str__(self):
         payload = {
             "title": self.title,
-            "body": self.body
+            "body": self.body,
+            "format": self.format
         }
         return json.dumps(payload)
 
@@ -43,7 +45,7 @@ class NotificationHandler:
         while True:
             # message, attachments = self.queue.get()
             message = self.queue.get()
-            self.apobj.notify(body=message.body, title=message.title, body_format=apprise.NotifyFormat.MARKDOWN, interpret_escapes=True)
+            self.apobj.notify(body=message.body, title=message.title, body_format=message.format, interpret_escapes=True)
 
             # if attachments:
             #     self.apobj.notify(body=message.body, attach=attachments)
