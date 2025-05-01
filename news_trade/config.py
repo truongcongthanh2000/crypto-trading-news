@@ -43,6 +43,6 @@ class Config:
 
     def beautify(self):
         response = vars(self).copy()
-        # response["TWITTER_COOKIES_DICT"] = "{.....}"
-        response["TWITTER_COOKIES_TYPE"] = type(response["TWITTER_COOKIES_DICT"]) is dict
+        response["TWITTER_COOKIES_DICT"] = "{.....}"
+        response["TWITTER_COOKIES_TYPE"] = str(type(response["TWITTER_COOKIES_DICT"]))
         return response
