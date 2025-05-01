@@ -49,6 +49,8 @@ class Twitter:
         return self.filter_tweets(tweets)
     
     def scrape_user_tweets(self):
+        if self.config.TWITTER_ENABLED == False:
+            return            
         list_query = self.config.TWITTER_LIST_QUERY
         tweets = []
         for query in list_query:

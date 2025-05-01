@@ -168,6 +168,8 @@ class Threads:
         return threads_post
     
     def scrape_user_posts(self):
+        if self.config.THREADS_ENABLED == False:
+            return
         list_username = self.config.THREADS_LIST_USERNAME
         posts = []
         for username in list_username:
