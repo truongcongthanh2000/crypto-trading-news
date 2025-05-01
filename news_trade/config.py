@@ -44,4 +44,5 @@ class Config:
     def beautify(self):
         response = vars(self).copy()
         # response["TWITTER_COOKIES_DICT"] = "{.....}"
+        response["TWITTER_COOKIES_TYPE"] = type(response["TWITTER_COOKIES_DICT"]) is dict
         return response
