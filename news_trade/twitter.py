@@ -15,7 +15,7 @@ class Twitter:
         self.config = config
         self.logger = logger
         self.client = Client(language='en-US')
-        self.client.set_cookies(config.TWITTER_COOKIES_DICT)
+        self.client.set_cookies(config.TWITTER_COOKIES_DICT, clear_cookies=True)
         self.map_timestamp_by_user = {} 
 
     def filter_tweets(self, tweets: Result[Tweet]) -> list[Message]:
@@ -55,7 +55,8 @@ class Twitter:
                 body=f"Error: {err=}", 
                 format=apprise.NotifyFormat.TEXT
             ), True)
-            tweets = [] 
+            tweets = []
+            # loop.close()
         return self.filter_tweets(tweets)
     
     def scrape_user_tweets(self):
