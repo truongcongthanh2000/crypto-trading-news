@@ -48,7 +48,7 @@ class Twitter:
     def get_tweets(self, query: str) -> list[Message]:
         loop = asyncio.get_event_loop()
         try:
-            tweets = loop.run_until_complete(self.client.search_tweet(query, product='Latest'))
+            tweets = loop.run_until_complete(self.client.search_tweet(query, product='Latest', count=self.config.TWITTER_TWEETS_COUNT))
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Twitter.get_tweets - {query}",

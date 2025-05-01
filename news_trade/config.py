@@ -9,7 +9,8 @@ class Config:
                 "scrape_sleep_time": 600,
                 "sla": "86400",
                 "list_query": [],
-                "enabled": False
+                "enabled": False,
+                "tweets_count": 5
             },
             "threads": {
                 "list_username": [],
@@ -36,6 +37,7 @@ class Config:
         self.TWITTER_SCRAPE_SLEEP_TIME = int(os.environ.get("TWITTER_SCRAPE_SLEEP_TIME") or config["twitter"]["scrape_sleep_time"])
         self.TWITTER_LIST_QUERY = [query.strip() for query in os.environ.get("TWITTER_LIST_QUERY", "").split() if query.strip()] or config["twitter"]["list_query"]
         self.TWITTER_SLA = int(os.environ.get("TWITTER_SLA") or config["twitter"]["sla"])
+        self.TWITTER_TWEETS_COUNT = int(os.environ.get("TWITTER_TWEETS_COUNT") or config["twitter"]["tweets_count"])
         if "TWITTER_ENABLED" in os.environ:
             self.TWITTER_ENABLED = os.environ.get("TWITTER_ENABLED").lower() == "true"
         else:
