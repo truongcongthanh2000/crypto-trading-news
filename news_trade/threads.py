@@ -48,12 +48,12 @@ class Threads:
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         if process.returncode != 0:
-            self.logger.error(Message(title=f'Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stderr.decode('utf-8')}'), True)
+            self.logger.error(Message(title=f"Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stderr.decode('utf-8')}"), True)
         else:
             msg = stdout.decode('utf-8') or 'Successful'
             msg = msg.replace('\u25a0', '')
             msg = remove_redundant_spaces(msg)
-            self.logger.info(Message(title=f'Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=msg), True)
+            self.logger.info(Message(title=f"Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=msg), True)
     
     # Note: we'll also be using parse_thread function we wrote earlier:
 
@@ -160,8 +160,8 @@ class Threads:
                 continue
             max_timestamp = max(max_timestamp, thread['published_on'])
             threads_post.append(Message(
-                body = f'{thread['text']}\n\n[Link: {thread["url"]}]({thread["url"]})',
-                title = f'Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}'
+                body = f"{thread['text']}\n\n[Link: {thread['url']}]({thread['url']})",
+                title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}"
             ))
         if max_timestamp > 0:
             self.map_last_timestamp[username] = max_timestamp

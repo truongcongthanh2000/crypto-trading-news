@@ -10,5 +10,4 @@ for item in data:
     if name and value:
         result[name] = value
 
-with open('cookies.json', 'w') as file:
-    json.dump(result, file, indent=4)
+print(json.dumps(result))
