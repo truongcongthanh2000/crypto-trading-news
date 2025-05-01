@@ -17,6 +17,14 @@ class Config:
                 "sla": 86400,
                 "scrape_sleep_time": 60,
                 "enabled": False
+            },
+            "telegram": {
+                "api_id": "",
+                "api_hash": "",
+                "session_string": "",
+                "bot_username": "",
+                "list_channel": [],
+                "enabled": False
             }
         }
         self.TWITTER_COOKIES_DICT = {}
@@ -43,8 +51,19 @@ class Config:
         else:
             self.TWITTER_ENABLED = config["twitter"]["enabled"]
 
+        self.TELEGRAM_API_ID = os.environ.get("TELEGRAM_API_ID") or config["telegram"]["api_id"]
+        self.TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH") or config["telegram"]["api_hash"]
+        self.TELEGRAM_SESSION_STRING = os.environ.get("TELEGRAM_SESSION_STRING") or config["telegram"]["session_string"]
+        self.TELEGRAM_BOT_USERNAME = os.environ.get("TELEGRAM_BOT_USERNAME") or config["telegram"]["bot_username"]
+        self.TELEGRAM_LIST_CHANNEL = [channel.strip() for channel in os.environ.get("TELEGRAM_LIST_CHANNEL", "").split() if channel.strip()] or config["telegram"]["list_channel"]
+        if "TELEGRAM_ENABLED" in os.environ:
+            self.TELEGRAM_ENABLED = os.environ.get("TELEGRAM_ENABLED").lower() == "true"
+        else:
+            self.TELEGRAM_ENABLED = config["telegram"]["enabled"]
+
     def beautify(self):
         response = vars(self).copy()
         response["TWITTER_COOKIES_TYPE"] = str(type(response["TWITTER_COOKIES_DICT"]))
         response["TWITTER_COOKIES_DICT"] = "{.....}"
+        response["TELEGRAM_SESSION_STRING"] = "...."
         return response
