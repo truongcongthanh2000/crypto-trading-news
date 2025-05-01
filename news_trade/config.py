@@ -28,7 +28,7 @@ class Config:
         self.THREADS_SLA = int(os.environ.get("THREADS_SLA") or config["threads"]["sla"])
         self.THREADS_SCRAPE_SLEEP_TIME = int(os.environ.get("THREADS_SCRAPE_SLEEP_TIME") or config["threads"]["scrape_sleep_time"])
         if "THREADS_ENABLED" in os.environ:
-            self.THREADS_ENABLED = os.environ.get("THREADS_ENABLED").lower == "true"
+            self.THREADS_ENABLED = os.environ.get("THREADS_ENABLED").lower() == "true"
         else:
             self.THREADS_ENABLED = config["threads"]["enabled"]
 
@@ -37,7 +37,7 @@ class Config:
         self.TWITTER_LIST_QUERY = [query.strip() for query in os.environ.get("TWITTER_LIST_QUERY", "").split() if query.strip()] or config["twitter"]["list_query"]
         self.TWITTER_SLA = int(os.environ.get("TWITTER_SLA") or config["twitter"]["sla"])
         if "TWITTER_ENABLED" in os.environ:
-            self.TWITTER_ENABLED = os.environ.get("TWITTER_ENABLED").lower == "true"
+            self.TWITTER_ENABLED = os.environ.get("TWITTER_ENABLED").lower() == "true"
         else:
             self.TWITTER_ENABLED = config["twitter"]["enabled"]
 
