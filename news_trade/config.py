@@ -24,6 +24,9 @@ class Config:
                 "session_string": "",
                 "bot_username": "",
                 "list_channel": [],
+                "limit": 10,
+                "sla": 600,
+                "scrape_sleep_time": 30,
                 "enabled": False
             }
         }
@@ -56,6 +59,9 @@ class Config:
         self.TELEGRAM_SESSION_STRING = os.environ.get("TELEGRAM_SESSION_STRING") or config["telegram"]["session_string"]
         self.TELEGRAM_BOT_USERNAME = os.environ.get("TELEGRAM_BOT_USERNAME") or config["telegram"]["bot_username"]
         self.TELEGRAM_LIST_CHANNEL = [channel.strip() for channel in os.environ.get("TELEGRAM_LIST_CHANNEL", "").split() if channel.strip()] or config["telegram"]["list_channel"]
+        self.TELEGRAM_LIMIT = int(os.environ.get("TELEGRAM_LIMIT") or config["telegram"]["limit"])
+        self.TELEGRAM_SLA = int(os.environ.get("TELEGRAM_SLA") or config["telegram"]["sla"])
+        self.TELEGRAM_SCRAPE_SLEEP_TIME = int(os.environ.get("TELEGRAM_SCRAPE_SLEEP_TIME") or config["telegram"]["scrape_sleep_time"])
         if "TELEGRAM_ENABLED" in os.environ:
             self.TELEGRAM_ENABLED = os.environ.get("TELEGRAM_ENABLED").lower() == "true"
         else:
