@@ -6,6 +6,7 @@ from telethon.sessions import StringSession
 import apprise
 import asyncio
 from datetime import datetime, timedelta, timezone
+import pytz
 class Telegram:
     def __init__(self, config: Config, logger: Logger):
         self.config = config
@@ -39,22 +40,12 @@ class Telegram:
         return messages
     
     def forward_messages(self, channel):
-        async def forward(messages):
-            await self.client.forward_messages(self.config.TELEGRAM_PEER_ID, messages)
         messages = self.pull_messages(channel)
-        if len(messages) > 0:
-            loop = asyncio.get_event_loop()
-            for message in messages:     
-                print(message.to_dict())
-                # self.logger.info(Message(body=str(bytes(message))), True)
-            try:
-                loop.run_until_complete(forward(messages=messages))
-            except Exception as err:
-                self.logger.error(Message(
-                    title=f"Error Telegram.forward_messages - {channel}",
-                    body=f"Error: {err=}", 
-                    format=apprise.NotifyFormat.TEXT
-                ), True)
+        for message in messages:
+            self.logger.info(Message(
+                title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
+                body=message.message
+            ), True)
     
     def scrape_channel_messages(self):
         if self.config.TELEGRAM_ENABLED == False:
