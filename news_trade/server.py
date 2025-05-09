@@ -1,10 +1,10 @@
 import time
 from .logger import Logger
 from .scheduler import SafeScheduler
-from .twitter import Twitter
+from .social_news.twitter import Twitter
 from .config import Config
-from .threads import Threads
-from .telegram import Telegram
+from .social_news.threads import Threads
+from .social_news.telegram import Telegram
 from .notification import Message
 from datetime import datetime
 import pytz

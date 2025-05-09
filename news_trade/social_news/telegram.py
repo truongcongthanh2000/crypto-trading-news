@@ -1,10 +1,8 @@
-from .logger import Logger
-from .config import Config
-from .notification import Message
+from ..logger import Logger
+from ..config import Config
+from ..notification import Message
 from telethon import TelegramClient
-from telethon.hints import TotalList
 from telethon.sessions import StringSession
-import time
 import apprise
 import asyncio
 from datetime import datetime, timedelta, timezone
@@ -42,10 +40,13 @@ class Telegram:
     
     def forward_messages(self, channel):
         async def forward(messages):
-            await self.client.forward_messages(self.config.TELEGRAM_BOT_USERNAME, messages)
+            await self.client.forward_messages(self.config.TELEGRAM_PEER_ID, messages)
         messages = self.pull_messages(channel)
         if len(messages) > 0:
             loop = asyncio.get_event_loop()
+            for message in messages:     
+                print(message.to_dict())
+                # self.logger.info(Message(body=str(bytes(message))), True)
             try:
                 loop.run_until_complete(forward(messages=messages))
             except Exception as err:

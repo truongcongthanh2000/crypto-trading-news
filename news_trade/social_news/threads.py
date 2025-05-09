@@ -6,9 +6,9 @@ import jmespath
 from parsel import Selector
 from playwright.sync_api import sync_playwright
 from nested_lookup import nested_lookup
-from .logger import Logger
-from .config import Config
-from .notification import Message
+from ..logger import Logger
+from ..config import Config
+from ..notification import Message
 from datetime import datetime
 import pytz
 import subprocess

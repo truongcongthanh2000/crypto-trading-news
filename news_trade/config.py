@@ -22,7 +22,7 @@ class Config:
                 "api_id": "",
                 "api_hash": "",
                 "session_string": "",
-                "bot_username": "",
+                "peer_id": "",
                 "list_channel": [],
                 "limit": 10,
                 "sla": 600,
@@ -57,7 +57,7 @@ class Config:
         self.TELEGRAM_API_ID = os.environ.get("TELEGRAM_API_ID") or config["telegram"]["api_id"]
         self.TELEGRAM_API_HASH = os.environ.get("TELEGRAM_API_HASH") or config["telegram"]["api_hash"]
         self.TELEGRAM_SESSION_STRING = os.environ.get("TELEGRAM_SESSION_STRING") or config["telegram"]["session_string"]
-        self.TELEGRAM_BOT_USERNAME = os.environ.get("TELEGRAM_BOT_USERNAME") or config["telegram"]["bot_username"]
+        self.TELEGRAM_PEER_ID = os.environ.get("TELEGRAM_PEER_ID") or config["telegram"]["peer_id"]
         self.TELEGRAM_LIST_CHANNEL = [channel.strip() for channel in os.environ.get("TELEGRAM_LIST_CHANNEL", "").split() if channel.strip()] or config["telegram"]["list_channel"]
         self.TELEGRAM_LIMIT = int(os.environ.get("TELEGRAM_LIMIT") or config["telegram"]["limit"])
         self.TELEGRAM_SLA = int(os.environ.get("TELEGRAM_SLA") or config["telegram"]["sla"])
