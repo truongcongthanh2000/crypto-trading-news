@@ -20,8 +20,15 @@ class Command:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handles command /start from the admin"""
-        public_ip = requests.get('https://api.ipify.org').text
-        await update.message.reply_text(text=f"👋 Hello, your server IP is {public_ip}")
+        try:
+            public_ip = requests.get('https://api.ipify.org').text
+            await update.message.reply_text(text=f"👋 Hello, your server IP is {public_ip}")
+        except Exception as err:
+            self.logger.error(Message(
+                title=f"Error Command.start - {update}",
+                body=f"Error: {err=}", 
+                format=apprise.NotifyFormat.TEXT
+            ), True)
 
     async def error(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         self.logger.error(Message(
