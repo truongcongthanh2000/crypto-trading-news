@@ -6,11 +6,11 @@ from .config import Config
 from .social_news.threads import Threads
 from .social_news.telegram import Telegram
 from .notification import Message
+from .command import Command
 from datetime import datetime
 import pytz
 import json
 import apprise
-import asyncio
 
 def main():
     config = Config()
@@ -21,6 +21,8 @@ def main():
     threads = Threads(config, logger)
     telegram = Telegram(config, logger)
     schedule = SafeScheduler(logger)
+    command = Command(config)
+    command.start_bot()
     schedule.every(config.THREADS_SCRAPE_SLEEP_TIME).seconds.do(threads.scrape_user_posts).tag("threads_scrape_news")
     schedule.every(config.TWITTER_SCRAPE_SLEEP_TIME).seconds.do(twitter.scrape_user_tweets).tag("twitter_scrape_news")
     schedule.every(config.TELEGRAM_SCRAPE_SLEEP_TIME).seconds.do(telegram.scrape_channel_messages).tag("scrape_channel_messages")

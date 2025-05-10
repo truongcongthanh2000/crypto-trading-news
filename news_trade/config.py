@@ -27,7 +27,8 @@ class Config:
                 "limit": 10,
                 "sla": 600,
                 "scrape_sleep_time": 30,
-                "enabled": False
+                "enabled": False,
+                "bot_token": ""
             }
         }
         self.TWITTER_COOKIES_DICT = {}
@@ -66,6 +67,7 @@ class Config:
             self.TELEGRAM_ENABLED = os.environ.get("TELEGRAM_ENABLED").lower() == "true"
         else:
             self.TELEGRAM_ENABLED = config["telegram"]["enabled"]
+        self.TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or config["telegram"]["bot_token"]
 
     def beautify(self):
         response = vars(self).copy()
