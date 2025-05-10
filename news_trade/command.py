@@ -5,6 +5,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, Updater
 import apprise
 import socket
+import requests
 
 class Command:
     def __init__(self, config: Config, logger: Logger):
@@ -19,9 +20,8 @@ class Command:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handles command /start from the admin"""
-        hostname = socket.gethostname()
-        IPAddr = socket.gethostbyname(hostname)        
-        await update.message.reply_text(text=f"👋 Hello, your server IP is {IPAddr}")
+        public_ip = requests.get('https://api.ipify.org').text
+        await update.message.reply_text(text=f"👋 Hello, your server IP is {public_ip}")
 
     async def error(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         self.logger.error(Message(
