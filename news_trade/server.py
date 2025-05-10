@@ -21,7 +21,7 @@ def main():
     threads = Threads(config, logger)
     telegram = Telegram(config, logger)
     schedule = SafeScheduler(logger)
-    command = Command(config)
+    command = Command(config, logger)
     command.start_bot()
     schedule.every(config.THREADS_SCRAPE_SLEEP_TIME).seconds.do(threads.scrape_user_posts).tag("threads_scrape_news")
     schedule.every(config.TWITTER_SCRAPE_SLEEP_TIME).seconds.do(twitter.scrape_user_tweets).tag("twitter_scrape_news")
