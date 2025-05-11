@@ -27,8 +27,10 @@ class Command:
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handles command /start from the admin"""
         try:
+            hostname = socket.gethostname()
+            IPAddr = socket.gethostbyname(hostname)
             public_ip = requests.get('https://api.ipify.org').text
-            await update.message.reply_text(text=f"👋 Hello, your server IP is {public_ip}")
+            await update.message.reply_text(text=f"👋 Hello, your server public IP is {public_ip}, local IP is {IPAddr}")
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.start - {update}",
