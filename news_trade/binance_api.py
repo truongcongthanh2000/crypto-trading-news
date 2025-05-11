@@ -7,8 +7,8 @@ class BinanceAPI:
         self.config = config
         self.logger = logger
         self.binance_client = Client(
-            api_key=config.BINANCE_API_KEY,
-            api_secret=config.BINANCE_API_SECRET
+            api_key=config.COMMAND_API_KEY,
+            api_secret=config.COMMAND_API_SECRET
         )
 
     def get_account(self):
