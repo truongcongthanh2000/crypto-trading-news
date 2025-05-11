@@ -17,6 +17,8 @@ class Command:
         self.binance_api = binance_api
 
     def start_bot(self):
+        if self.config.COMMAND_ENABLED == False:
+            return
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("account", self.account))
         self.application.add_error_handler(self.error)

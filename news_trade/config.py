@@ -76,10 +76,10 @@ class Config:
 
         self.COMMAND_API_KEY = os.environ.get("COMMAND_API_KEY") or config["command"]["api_key"]
         self.COMMAND_API_SECRET = os.environ.get("COMMAND_API_SECRET") or config["command"]["api_secret"]
-        if "COMMAND_ENBALED" in os.environ:
-            self.COMMAND_ENABLED = os.environ.get("COMMAND_ENBALED").lower() == "true"
+        if "COMMAND_ENABLED" in os.environ:
+            self.COMMAND_ENABLED = os.environ.get("COMMAND_ENABLED").lower() == "true"
         else:
-            self.COMMAND_ENBALED = config["command"]["enabled"]
+            self.COMMAND_ENABLED = config["command"]["enabled"]
     def beautify(self):
         response = vars(self).copy()
         response["TWITTER_COOKIES_TYPE"] = str(type(response["TWITTER_COOKIES_DICT"]))
