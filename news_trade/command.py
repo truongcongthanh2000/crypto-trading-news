@@ -6,15 +6,19 @@ from telegram.ext import Application, CommandHandler, ContextTypes, Updater
 import apprise
 import socket
 import requests
+from .binance_api import BinanceAPI
+import json
 
 class Command:
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Config, logger: Logger, binance_api: BinanceAPI):
         self.config = config
         self.logger = logger
         self.application = Application.builder().token(config.TELEGRAM_BOT_TOKEN).build()
+        self.binance_api = binance_api
 
     def start_bot(self):
         self.application.add_handler(CommandHandler("start", self.start))
+        self.application.add_handler(CommandHandler("account", self.account))
         self.application.add_error_handler(self.error)
         self.application.run_polling()
 
@@ -26,6 +30,17 @@ class Command:
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.start - {update}",
+                body=f"Error: {err=}", 
+                format=apprise.NotifyFormat.TEXT
+            ), True)
+    
+    async def account(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            account_info = self.binance_api.get_account()
+            await update.message.reply_text(text=f"Current account info: {json.dumps(account_info, indent=2)}")
+        except Exception as err:
+            self.logger.error(Message(
+                title=f"Error Command.account - {update}",
                 body=f"Error: {err=}", 
                 format=apprise.NotifyFormat.TEXT
             ), True)

@@ -1,0 +1,18 @@
+from .config import Config
+from .logger import Logger
+from .notification import Message
+from binance.client import Client
+class BinanceAPI:
+    def __init__(self, config: Config, logger: Logger):
+        self.config = config
+        self.logger = logger
+        self.binance_client = Client(
+            api_key=config.BINANCE_API_KEY,
+            api_secret=config.BINANCE_API_SECRET
+        )
+
+    def get_account(self):
+        """
+        Get account information
+        """
+        return self.binance_client.get_account()
