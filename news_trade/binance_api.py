@@ -9,11 +9,11 @@ class BinanceAPI:
         self.binance_client = Client(
             api_key=config.COMMAND_API_KEY,
             api_secret=config.COMMAND_API_SECRET,
-            tld="us"
+            tld=config.COMMAND_TLD
         )
 
     def get_account(self):
         """
         Get account information
         """
-        return self.binance_client.get_account()
+        return self.binance_client.futures_account_balance()
