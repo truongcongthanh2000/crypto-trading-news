@@ -9,7 +9,7 @@ import apprise
 import socket
 import requests
 from .binance_api import BinanceAPI
-
+import signal
 EPS = 1e-2
 class Command:
     def __init__(self, config: Config, logger: Logger, binance_api: BinanceAPI):
@@ -24,7 +24,7 @@ class Command:
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("info", self.info))
         self.application.add_error_handler(self.error)
-        self.application.run_polling()
+        self.application.run_polling(stop_signals=(signal.SIGINT, signal.SIGTERM, signal.SIGABRT))
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handles command /start from the admin"""
