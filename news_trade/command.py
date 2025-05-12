@@ -18,18 +18,18 @@ class Command:
     def __init__(self, config: Config, logger: Logger, binance_api: BinanceAPI):
         self.config = config
         self.logger = logger
-        self.application = Application.builder().token(config.TELEGRAM_BOT_TOKEN).read_timeout(7).get_updates_read_timeout(20).build()
         self.binance_api = binance_api
 
     def start_bot(self):
         if self.config.COMMAND_ENABLED == False:
             return
-        self.application.add_handler(CommandHandler("start", self.start))
-        self.application.add_handler(CommandHandler("info", self.info))
-        self.application.add_handler(CommandHandler("forder", self.forder))
-        self.application.add_handler(CommandHandler("fclose", self.fclose))
-        self.application.add_error_handler(self.error)
-        self.application.run_polling(drop_pending_updates=True)
+        application = Application.builder().token(self.config.TELEGRAM_BOT_TOKEN).build()
+        application.add_handler(CommandHandler("start", self.start))
+        application.add_handler(CommandHandler("info", self.info))
+        application.add_handler(CommandHandler("forder", self.forder))
+        application.add_handler(CommandHandler("fclose", self.fclose))
+        application.add_error_handler(self.error)
+        application.run_polling(stop_signals=None)
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handles command /start from the admin"""
