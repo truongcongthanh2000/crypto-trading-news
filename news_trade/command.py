@@ -23,7 +23,7 @@ class Command:
     def start_bot(self):
         if self.config.COMMAND_ENABLED == False:
             return
-        application = Application.builder().token(self.config.TELEGRAM_BOT_TOKEN).build()
+        application = Application.builder().token(self.config.TELEGRAM_BOT_TOKEN).read_timeout(7).get_updates_read_timeout(42).build()
         application.add_handler(CommandHandler("start", self.start))
         application.add_handler(CommandHandler("info", self.info))
         application.add_handler(CommandHandler("forder", self.forder))
