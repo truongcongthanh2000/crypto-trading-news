@@ -41,7 +41,7 @@ class BinanceAPI:
     def get_futures_account(self):
         return self.binance_client.futures_account()
     
-    def get_current_position(self, symbol: str | None):
+    def get_current_position(self, symbol: str | None = None):
         if symbol is None:
             return self.binance_client.futures_position_information()
         return self.binance_client.futures_position_information(symbol=symbol)
