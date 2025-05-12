@@ -44,7 +44,6 @@ class Command:
         try:
             msg = self.info_spot() + '\n--------------------\n' + self.info_future()
             msg = telegramify_markdown.markdownify(msg)
-            print(msg)
             await update.message.reply_text(text=msg, parse_mode=ParseMode.MARKDOWN_V2, link_preview_options=LinkPreviewOptions(is_disabled=True))
         except Exception as err:
             self.logger.error(Message(
