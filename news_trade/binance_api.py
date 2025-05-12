@@ -43,3 +43,22 @@ class BinanceAPI:
     
     def get_current_position(self):
         return self.binance_client.futures_position_information()
+    
+    def f_get_symbol_info(self, symbol: str):
+        info = self.f_exchange_info()
+        for x in info['symbols']:
+            if x['symbol'] == symbol:
+                return x
+        return None
+            
+    def f_exchange_info(self):
+        return self.binance_client.futures_exchange_info()
+
+    def f_batch_order(self, batch_orders: list[dict]):
+        return self.binance_client.futures_place_batch_order(batchOrders=batch_orders)
+    
+    def f_change_leverage(self, symbol: str, leverage: int):
+        return self.binance_client.futures_change_leverage(symbol=symbol, leverage=leverage)
+
+    def f_price(self, symbol: str) -> float:
+        return float(self.binance_client.futures_mark_price(symbol=symbol)["markPrice"])

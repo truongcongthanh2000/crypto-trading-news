@@ -9,7 +9,7 @@ import apprise
 import socket
 import requests
 from .binance_api import BinanceAPI
-import signal
+import json
 EPS = 1e-2
 class Command:
     def __init__(self, config: Config, logger: Logger, binance_api: BinanceAPI):
@@ -23,6 +23,7 @@ class Command:
             return
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("info", self.info))
+        self.application.add_handler(CommandHandler("forder", self.forder))
         self.application.add_error_handler(self.error)
         self.application.run_polling(drop_pending_updates=True)
 
@@ -51,7 +52,37 @@ class Command:
                 body=f"Error: {err=}", 
                 format=apprise.NotifyFormat.TEXT
             ), True)
-
+    
+    # forder buy/sell coin leverage margin sl(optional) tp(optional)
+    async def forder(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        side = context.args[0]
+        coin = context.args[1].upper()
+        leverage = int(context.args[2])
+        margin = float(context.args[3])
+        try:
+            symbol = coin + "USDT"
+            # change leverage for symbol first
+            self.binance_api.f_change_leverage(symbol, leverage)
+            batch_orders = self.f_get_orders(side, symbol, leverage, margin, context)
+            responses = self.binance_api.f_batch_order(batch_orders)
+            ok = True
+            for idx in range(len(responses)):
+                if "code" in responses[idx] and int(responses[idx]["code"]) < 0:
+                    # Error
+                    self.logger.error(Message(
+                        title=f"Error Command.forder - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
+                        body=f"Error: {responses[idx]['msg']}",
+                        format=apprise.NotifyFormat.TEXT
+                    ), True)
+                    ok = False
+            if ok:
+                await update.message.reply_text(text=f"👋 Your order is successful\n {json.dumps(batch_orders, indent=2)}")
+        except Exception as err:
+            self.logger.error(Message(
+                title=f"Error Command.forder - {side} - {symbol} - {leverage} - {margin}",
+                body=f"Error: {err=}", 
+                format=apprise.NotifyFormat.TEXT
+            ), True)  
     async def error(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         self.logger.error(Message(
             title=f"Error Command.Update {update}",
@@ -108,3 +139,39 @@ class Command:
         info += f"**Total ROI**: {round(float(account_info['totalUnrealizedProfit']) / float(account_info['totalWalletBalance']) * 100, 2)}%\n"
         info += f"**After Total Balance**: ${float(account_info['totalMarginBalance']):.2f}"
         return info
+    
+    def f_get_orders(self, side: str, symbol: str, leverage: int, margin: float, context: ContextTypes.DEFAULT_TYPE):
+        price = self.binance_api.f_price(symbol)
+        pair_info = self.binance_api.f_get_symbol_info(symbol)
+        quantity_precision = int(pair_info['quantityPrecision']) if pair_info else 3
+        quantity = round(margin * leverage / price, quantity_precision)
+        if 'b' in side:
+            side_upper = "BUY"
+        else:
+            side_upper = "SELL"
+        order = {
+            "type": "MARKET",
+            "side": side_upper,
+            "symbol": symbol,
+            "quantity": str(quantity)
+        }
+        batch_orders = [order]
+        if len(context.args) > 4:
+            sl_order = {
+                "type": "STOP_MARKET",
+                "side": "BUY" if side_upper == "SELL" else "SELL",
+                "symbol": symbol,
+                "stopPrice": context.args[4],
+                "closePosition": "true"
+            }
+            batch_orders.append(sl_order)
+        if len(context.args) > 5:
+            tp_order = {
+                "type": "TAKE_PROFIT_MARKET",
+                "side": "BUY" if side_upper == "SELL" else "SELL",
+                "symbol": symbol,
+                "stopPrice": context.args[5],
+                "closePosition": "true"
+            }
+            batch_orders.append(tp_order)
+        return batch_orders
