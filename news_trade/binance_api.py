@@ -67,3 +67,6 @@ class BinanceAPI:
     
     def f_cancel_all_open_orders(self, symbol: str):
         return self.binance_client.futures_cancel_all_open_orders(symbol=symbol)
+    
+    def f_get_historical_klines(self, symbol: str):
+        return self.binance_client.futures_historical_klines(symbol, )
