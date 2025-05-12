@@ -41,8 +41,10 @@ class BinanceAPI:
     def get_futures_account(self):
         return self.binance_client.futures_account()
     
-    def get_current_position(self):
-        return self.binance_client.futures_position_information()
+    def get_current_position(self, symbol: str | None):
+        if symbol is None:
+            return self.binance_client.futures_position_information()
+        return self.binance_client.futures_position_information(symbol=symbol)
     
     def f_get_symbol_info(self, symbol: str):
         info = self.f_exchange_info()
@@ -62,3 +64,6 @@ class BinanceAPI:
 
     def f_price(self, symbol: str) -> float:
         return float(self.binance_client.futures_mark_price(symbol=symbol)["markPrice"])
+    
+    def f_open_orders(self, symbol: str):
+        return self.binance_client.futures_get_open_orders(symbol=symbol)

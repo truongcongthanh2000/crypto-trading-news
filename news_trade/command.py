@@ -24,6 +24,7 @@ class Command:
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("info", self.info))
         self.application.add_handler(CommandHandler("forder", self.forder))
+        self.application.add_handler(CommandHandler("fclose", self.fclose))
         self.application.add_error_handler(self.error)
         self.application.run_polling(drop_pending_updates=True)
 
@@ -82,7 +83,21 @@ class Command:
                 title=f"Error Command.forder - {side} - {symbol} - {leverage} - {margin}",
                 body=f"Error: {err=}", 
                 format=apprise.NotifyFormat.TEXT
-            ), True)  
+            ), True)
+    
+    async def fclose(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        coin = context.args[0].upper()
+        try:
+            symbol = coin + "USDT"
+            a = self.binance_api.f_open_orders(symbol)
+            b = self.binance_api.get_current_position(symbol)
+            print(a, b)
+        except Exception as err:
+            self.logger.error(Message(
+                title=f"Error Command.fclose - {symbol}",
+                body=f"Error: {err=}", 
+                format=apprise.NotifyFormat.TEXT
+            ), True)
     async def error(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         self.logger.error(Message(
             title=f"Error Command.Update {update}",
