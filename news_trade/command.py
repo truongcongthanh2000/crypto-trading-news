@@ -77,7 +77,7 @@ class Command:
                     ), True)
                     ok = False
             if ok:
-                await update.message.reply_text(text=f"👋 Your order is successful\n {json.dumps(batch_orders, indent=2)}")
+                await update.message.reply_text(text=f"👋 Your order for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}")
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.forder - {side} - {symbol} - {leverage} - {margin}",
@@ -89,9 +89,23 @@ class Command:
         coin = context.args[0].upper()
         try:
             symbol = coin + "USDT"
-            a = self.binance_api.f_open_orders(symbol)
-            b = self.binance_api.get_current_position(symbol)
-            print(a, b)
+            batch_orders = self.f_get_close_positions(symbol)
+            responses = self.binance_api.f_batch_order(batch_orders)
+            ok = True
+            for idx in range(len(responses)):
+                if "code" in responses[idx] and int(responses[idx]["code"]) < 0:
+                    # Error
+                    self.logger.error(Message(
+                        title=f"Error Command.forder - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
+                        body=f"Error: {responses[idx]['msg']}",
+                        format=apprise.NotifyFormat.TEXT
+                    ), True)
+                    ok = False
+            if ok:
+                msg = f"👋 Your close positions for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}\n-------------\n"
+                cancel_open_orders_response = self.binance_api.f_cancel_all_open_orders(symbol)
+                msg += f"👋 Cancel all open orders for {symbol}\n {json.dumps(cancel_open_orders_response, indent=2)}"
+                await update.message.reply_text(text=msg)
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.fclose - {symbol}",
@@ -189,4 +203,22 @@ class Command:
                 "closePosition": "true"
             }
             batch_orders.append(tp_order)
+        return batch_orders
+
+    def f_get_close_positions(self, symbol: str):
+        positions = self.binance_api.get_current_position(symbol=symbol)
+        batch_orders = []
+        for position in positions:
+            amount = float(position["positionAmt"])
+            if amount > 0:
+                side_upper = "BUY"
+            else:
+                side_upper = "SELL"
+            close_order = {
+                "type": "MARKET",
+                "side": "BUY" if side_upper == "SELL" else "SELL",
+                "symbol": symbol,
+                "quantity": position["positionAmt"],
+            }
+            batch_orders.append(close_order)
         return batch_orders
