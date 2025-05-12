@@ -24,7 +24,7 @@ class Command:
         self.application.add_handler(CommandHandler("start", self.start))
         self.application.add_handler(CommandHandler("info", self.info))
         self.application.add_error_handler(self.error)
-        self.application.run_polling(stop_signals=None)
+        self.application.run_polling(drop_pending_updates=True)
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handles command /start from the admin"""
