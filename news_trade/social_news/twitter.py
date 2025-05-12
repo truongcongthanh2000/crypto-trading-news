@@ -63,7 +63,7 @@ class Twitter:
         if self.config.TWITTER_ENABLED == False:
             return
         list_query = self.config.TWITTER_LIST_QUERY
-        self.logger.debug(Message(f"Twitter.scrape_user_tweets with list query: {', '.join(list_query)}"))
+        self.logger.info(Message(f"Twitter.scrape_user_tweets with list query: {', '.join(list_query)}"))
         tweets = []
         for query in list_query:
             tweets.extend(self.get_tweets(query))
