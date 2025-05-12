@@ -1,6 +1,7 @@
 import yaml
 import os
 import json
+import platform
 class Config:
     def __init__(self):
         config = {
@@ -84,6 +85,7 @@ class Config:
         self.COMMAND_TLD = os.environ.get("COMMAND_TLD") or config["command"]["tld"]
     def beautify(self):
         response = vars(self).copy()
+        response["platform"] = platform.system()
         response["TWITTER_COOKIES_TYPE"] = str(type(response["TWITTER_COOKIES_DICT"]))
         response["TWITTER_COOKIES_DICT"] = "{.....}"
         response["TELEGRAM_SESSION_STRING"] = "...."
