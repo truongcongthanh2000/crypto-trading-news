@@ -50,5 +50,6 @@ class Telegram:
     def scrape_channel_messages(self):
         if self.config.TELEGRAM_ENABLED == False:
             return
+        self.logger.debug(Message(f"Telegram.scrape_channel_messages with list channel: {', '.join(self.config.TELEGRAM_LIST_CHANNEL)}"))
         for channel in self.config.TELEGRAM_LIST_CHANNEL:
             self.forward_messages(channel)

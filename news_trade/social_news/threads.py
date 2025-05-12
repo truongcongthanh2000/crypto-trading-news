@@ -171,6 +171,7 @@ class Threads:
         if self.config.THREADS_ENABLED == False:
             return
         list_username = self.config.THREADS_LIST_USERNAME
+        self.logger.debug(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
         posts = []
         for username in list_username:
             posts.extend(self.retrieve_user_posts(username))
