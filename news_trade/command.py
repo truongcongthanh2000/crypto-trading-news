@@ -105,6 +105,6 @@ class Command:
         info += f"**Total Initial Margin**: ${float(account_info['totalInitialMargin']):.2f} (Position: ${float(account_info['totalPositionInitialMargin']):.2f}, Open: ${float(account_info['totalOpenOrderInitialMargin']):.2f})\n"
         info += f"**Available Balance**: ${float(account_info['availableBalance']):.2f}\n\n"
         info += f"**Total Unrealized Profit**: ${float(account_info['totalUnrealizedProfit']):.2f}\n"
-        info += f"**Total ROI**: {round(float(account_info['totalUnrealizedProfit']) / float(account_info['totalWalletBalance']) * 100, 2)}\n"
+        info += f"**Total ROI**: {round(float(account_info['totalUnrealizedProfit']) / float(account_info['totalWalletBalance']) * 100, 2)}%\n"
         info += f"**After Total Balance**: ${float(account_info['totalMarginBalance']):.2f}"
         return info
