@@ -18,7 +18,7 @@ class Command:
     def __init__(self, config: Config, logger: Logger, binance_api: BinanceAPI):
         self.config = config
         self.logger = logger
-        self.application = Application.builder().token(config.TELEGRAM_BOT_TOKEN).build()
+        self.application = Application.builder().token(config.TELEGRAM_BOT_TOKEN).read_timeout(7).get_updates_read_timeout(20).build()
         self.binance_api = binance_api
 
     def start_bot(self):
