@@ -1,9 +1,9 @@
 from twikit import Client, TooManyRequests, Tweet
 from twikit.utils import Result
-from ..logger import Logger
-from ..config import Config
+from .logger import Logger
+from .config import Config
 import asyncio
-from ..notification import Message
+from .notification import Message
 import time
 import pytz
 from datetime import datetime

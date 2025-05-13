@@ -30,12 +30,6 @@ class Config:
                 "scrape_sleep_time": 30,
                 "enabled": False,
                 "bot_token": ""
-            },
-            "command": {
-                "api_key": "",
-                "api_secret": "",
-                "enabled": False,
-                "tld": "com"
             }
         }
         self.TWITTER_COOKIES_DICT = {}
@@ -75,14 +69,6 @@ class Config:
         else:
             self.TELEGRAM_ENABLED = config["telegram"]["enabled"]
         self.TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or config["telegram"]["bot_token"]
-
-        self.COMMAND_API_KEY = os.environ.get("COMMAND_API_KEY") or config["command"]["api_key"]
-        self.COMMAND_API_SECRET = os.environ.get("COMMAND_API_SECRET") or config["command"]["api_secret"]
-        if "COMMAND_ENABLED" in os.environ:
-            self.COMMAND_ENABLED = os.environ.get("COMMAND_ENABLED").lower() == "true"
-        else:
-            self.COMMAND_ENABLED = config["command"]["enabled"]
-        self.COMMAND_TLD = os.environ.get("COMMAND_TLD") or config["command"]["tld"]
     def beautify(self):
         response = vars(self).copy()
         response["platform"] = platform.system()

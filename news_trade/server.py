@@ -1,29 +1,24 @@
 import time
 from .logger import Logger
 from .scheduler import SafeScheduler
-from .social_news.twitter import Twitter
+from .twitter import Twitter
 from .config import Config
-from .social_news.threads import Threads
-from .social_news.telegram import Telegram
+from .threads import Threads
+from .telegram import Telegram
 from .notification import Message
-from .command import Command
 from datetime import datetime
 import pytz
 import json
 import apprise
-from .binance_api import BinanceAPI
 def main():
     config = Config()
     logger = Logger(config, "news_trade_server")
     logger.info(Message(title = f"Start News Trade - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=f"{json.dumps(config.beautify(), indent=2)}", format=apprise.NotifyFormat.TEXT), True)
 
-    binance_api = BinanceAPI(config, logger)
     twitter = Twitter(config, logger)
     threads = Threads(config, logger)
     telegram = Telegram(config, logger)
     schedule = SafeScheduler(logger)
-    command = Command(config, logger, binance_api)
-    command.start_bot()
     schedule.every(config.THREADS_SCRAPE_SLEEP_TIME).seconds.do(threads.scrape_user_posts).tag("threads_scrape_news")
     schedule.every(config.TWITTER_SCRAPE_SLEEP_TIME).seconds.do(twitter.scrape_user_tweets).tag("twitter_scrape_news")
     schedule.every(config.TELEGRAM_SCRAPE_SLEEP_TIME).seconds.do(telegram.scrape_channel_messages).tag("scrape_channel_messages")

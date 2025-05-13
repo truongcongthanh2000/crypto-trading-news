@@ -1,6 +1,6 @@
-from ..logger import Logger
-from ..config import Config
-from ..notification import Message
+from .logger import Logger
+from .config import Config
+from .notification import Message
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 import apprise
