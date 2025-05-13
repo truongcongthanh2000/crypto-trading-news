@@ -75,6 +75,4 @@ class Config:
         response["TWITTER_COOKIES_TYPE"] = str(type(response["TWITTER_COOKIES_DICT"]))
         response["TWITTER_COOKIES_DICT"] = "{.....}"
         response["TELEGRAM_SESSION_STRING"] = "...."
-        response["COMMAND_API_KEY"] = "...."
-        response["COMMAND_API_SECRET"] = "...."
         return response
