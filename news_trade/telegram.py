@@ -3,7 +3,6 @@ from .config import Config
 from .notification import Message
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-import apprise
 import asyncio
 from datetime import datetime, timedelta, timezone
 import pytz
@@ -32,7 +31,7 @@ class Telegram:
             self.logger.error(Message(
                 title=f"Error Telegram.scrape_messages - {channel}",
                 body=f"Error: {err=}", 
-                format=apprise.NotifyFormat.TEXT
+                format=None
             ), True)
             messages = []
         if len(messages) > 0:

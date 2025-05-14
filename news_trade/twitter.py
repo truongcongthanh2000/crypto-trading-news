@@ -8,7 +8,6 @@ import time
 import pytz
 from datetime import datetime
 from random import randint
-import apprise
 
 class Twitter:
     def __init__(self, config: Config, logger: Logger):
@@ -53,7 +52,7 @@ class Twitter:
             self.logger.error(Message(
                 title=f"Error Twitter.get_tweets - {query}",
                 body=f"Error: {err=}", 
-                format=apprise.NotifyFormat.TEXT
+                format=None
             ), True)
             tweets = []
             # loop.close()
