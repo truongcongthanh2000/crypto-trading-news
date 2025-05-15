@@ -39,12 +39,19 @@ class Telegram:
         return messages
     
     def forward_messages(self, channel):
+        async def forward(messages):
+            await self.client.forward_messages(self.config.TELEGRAM_PEER_ID, messages)
         messages = self.pull_messages(channel)
-        for message in messages:
-            self.logger.info(Message(
-                title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
-                body=message.message
-            ), True)
+        if len(messages) > 0:
+            loop = asyncio.get_event_loop()
+            try:
+                loop.run_until_complete(forward(messages=messages))
+            except Exception as err:
+                self.logger.error(Message(
+                    title=f"Error Telegram.forward_messages - {channel}",
+                    body=f"Error: {err=}", 
+                    format=None
+                ), True)
     
     def scrape_channel_messages(self):
         if self.config.TELEGRAM_ENABLED == False:
