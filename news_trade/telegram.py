@@ -40,7 +40,21 @@ class Telegram:
     
     def forward_messages(self, channel):
         async def forward(messages):
-            await self.client.forward_messages(self.config.TELEGRAM_PEER_ID, messages)
+            try:
+                await self.client.forward_messages(self.config.TELEGRAM_PEER_ID, messages)
+            except Exception as err:
+                self.logger.error(Message(
+                    title=f"Error Telegram.forward_messages - {channel}",
+                    body=f"Error: {err=}", 
+                    format=None
+                ))
+                for message in messages:
+                    body = message.message
+                    body += f"\n\n**[Link: https://t.me/Whalefutures_channel/4301](https://t.me/Whalefutures_channel/{message.id})**"
+                    self.logger.info(Message(
+                        title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
+                        body=body
+                    ), True)
         messages = self.pull_messages(channel)
         if len(messages) > 0:
             loop = asyncio.get_event_loop()
