@@ -50,7 +50,7 @@ class Telegram:
                 ))
                 for message in messages:
                     body = message.message
-                    body += f"\n\n**[Link: https://t.me/Whalefutures_channel/{message.id}](https://t.me/Whalefutures_channel/{message.id})**"
+                    body += f"\n\n**[Link: https://t.me/{channel[1:]}/{message.id}](https://t.me/{channel[1:]}/{message.id})**"
                     self.logger.info(Message(
                         title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
                         body=body
