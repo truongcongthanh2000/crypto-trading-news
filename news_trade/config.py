@@ -30,6 +30,14 @@ class Config:
                 "scrape_sleep_time": 30,
                 "enabled": False,
                 "bot_token": ""
+            },
+            "discord": {
+                "enabled": False,
+                "sla": 600,
+                "limit": 10,
+                "scrape_sleep_time": 60,
+                "list_channel_id": [],
+                "token": ""
             }
         }
         self.TWITTER_COOKIES_DICT = {}
@@ -68,10 +76,21 @@ class Config:
         else:
             self.TELEGRAM_ENABLED = config["telegram"]["enabled"]
         self.TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or config["telegram"]["bot_token"]
+
+        if "DISCORD_ENABLED" in os.environ:
+            self.DISCORD_ENABLED = os.environ.get("DISCORD_ENABLED").lower() == "true"
+        else:
+            self.DISCORD_ENABLED = config["discord"]["enabled"]
+        self.DISCORD_SLA = int(os.environ.get("DISCORD_SLA") or config["discord"]["sla"])
+        self.DISCORD_LIMIT = int(os.environ.get("DISCORD_LIMIT") or config["discord"]["limit"])
+        self.DISCORD_SCRAPE_SLEEP_TIME = int(os.environ.get("DISCORD_SCRAPE_SLEEP_TIME") or config["discord"]["scrape_sleep_time"])
+        self.DISCORD_LIST_CHANNEL_ID =  [channel.strip() for channel in os.environ.get("DISCORD_LIST_CHANNEL_ID", "").split() if channel.strip()] or config["discord"]["list_channel_id"]
+        self.DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN") or config["discord"]["token"]
     def beautify(self):
         response = vars(self).copy()
         response["platform"] = platform.system()
         response["TWITTER_COOKIES_TYPE"] = str(type(response["TWITTER_COOKIES_DICT"]))
         response["TWITTER_COOKIES_DICT"] = "{.....}"
         response["TELEGRAM_SESSION_STRING"] = "...."
+        response["DISCORD_TOKEN"] = "...."
         return response
