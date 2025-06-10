@@ -58,7 +58,7 @@ class Discord:
                 title=f"Error Discord.init",
                 body=f"Error: {err=}\nSo we must disabled discord", 
                 format=None
-            ))
+            ), True)
             self.config.DISCORD_ENABLED = False
 
     def build_message(self, message, channel_info, guild_info):
@@ -111,7 +111,7 @@ class Discord:
                 title=f"Error Discord.get_messages - {guild_info['name']}-{channel_info['name']}({channel_id})",
                 body=f"Error: {err=}", 
                 format=None
-            ))
+            ), True)
         return []
 
     def scrape_channel_messages(self):

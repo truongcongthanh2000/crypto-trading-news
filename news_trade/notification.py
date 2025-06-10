@@ -1,13 +1,13 @@
 import queue
 import threading
-from os import path
 
 import json
 from .config import Config
 import telegramify_markdown
 import telebot
-from telebot.types import LinkPreviewOptions, InputMediaPhoto
-
+from telebot.types import LinkPreviewOptions, InputMediaPhoto, InputFile
+import requests
+import datetime
 class Message:
     def __init__(self, body: str, title = 'News Trade', format: str | None = "MarkdownV2", image: str | None = None, images: list[str] | None = None):
         self.title = title
@@ -57,9 +57,24 @@ class NotificationHandler:
                     ))
                 else:
                     list_media.append(InputMediaPhoto(media=image))
-            self.telebot.send_media_group(chat_id = self.config.TELEGRAM_PEER_ID, media=list_media)
+            try:
+                self.telebot.send_media_group(chat_id = self.config.TELEGRAM_PEER_ID, media=list_media)
+            except Exception as err:
+                self.telebot.send_message(chat_id = self.config.TELEGRAM_PEER_ID, text=text_msg + "\n" + f"Error send media group, err: {err}", parse_mode=message.format, link_preview_options=LinkPreviewOptions(is_disabled=True))
         elif message.image is not None and message.image != "":
-            self.telebot.send_photo(chat_id = self.config.TELEGRAM_PEER_ID, photo=message.image, caption = text_msg, parse_mode=message.format)
+            try:
+                self.telebot.send_photo(chat_id = self.config.TELEGRAM_PEER_ID, photo=message.image, caption = text_msg, parse_mode=message.format)
+            except Exception as err:
+                print(datetime.datetime.now(), " - ERROR - ", Message(
+                    title=f"Error Notification.send_photo, image={message.image}",
+                    body=f"Error: {err=}", 
+                    format=None
+                ))
+                request = requests.get(message.image, stream=True)
+                with open("photo.png", "wb+") as file:
+                    for c in request:
+                        file.write(c)
+                self.telebot.send_photo(chat_id = self.config.TELEGRAM_PEER_ID, photo=InputFile("photo.png"), caption = text_msg, parse_mode=message.format)
         else:
             self.telebot.send_message(chat_id = self.config.TELEGRAM_PEER_ID, text=text_msg, parse_mode=message.format, link_preview_options=LinkPreviewOptions(is_disabled=True))
     def process_queue(self):
