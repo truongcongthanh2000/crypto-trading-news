@@ -101,7 +101,7 @@ class Discord:
             url = f"{BASE_API_URL}/channels/{channel_id}/messages?limit={self.config.DISCORD_LIMIT}"
             if channel_id in self.map_channel_last_message_id:
                 url += f"&after={self.map_channel_last_message_id[channel_id]}"
-            self.logger.info(Message(f"Threads.get_messages on {guild_info['name']}-{channel_info['name']} with url: {url}"))
+            # self.logger.info(Message(f"Threads.get_messages on {guild_info['name']}-{channel_info['name']} with url: {url}"))
 
             response = requests.get(url, headers=self.base_headers)
             response.raise_for_status()
