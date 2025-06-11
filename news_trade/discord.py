@@ -65,18 +65,18 @@ class Discord:
         message_timestamp = iso_to_unix(message['timestamp'])
         url = f"https://discord.com/channels/{guild_info['id']}/{channel_info['id']}/{message['id']}"
         payload = Message(title= f"Discord - {guild_info['name']}-{channel_info['name']} - Time: {datetime.fromtimestamp(message_timestamp, tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body="")
-        def capture(message_sub):
-            payload.body = f"{message_sub['content']}\n\n[Link: {url}]({url})"
-            if 'attachments' in message_sub and len(message_sub['attachments']) > 0:
+        def capture(message):
+            payload.body = f"{message['content']}\n\n[Link: {url}]({url})"
+            if 'attachments' in message and len(message['attachments']) > 0:
                 images = []
-                for attachment in message_sub['attachments']:
+                for attachment in message['attachments']:
                     images.append(attachment['url'])
                 if len(images) == 1:
                     payload.image = images[0]
                 else:
                     payload.images = images
-        if 'message_snapshots' in message and len(message['message_snapshots'] > 0):
-            capture(message['message_snapshots'][0])
+        if 'message_snapshots' in message and len(message['message_snapshots']) > 0:
+            capture(message['message_snapshots'][0]['message'])
         else:
             capture(message)
         return payload
