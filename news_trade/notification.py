@@ -6,6 +6,7 @@ from .config import Config
 import telegramify_markdown
 import telebot
 from telebot.types import LinkPreviewOptions, InputMediaPhoto, InputFile
+from telebot import apihelper
 import requests
 import datetime
 class Message:
@@ -33,14 +34,10 @@ class NotificationHandler:
         if enabled:
             self.config = cfg
             self.queue = queue.Queue()
-            self.start_worker()
             self.enabled = True
             self.telebot = telebot.TeleBot(token=cfg.TELEGRAM_BOT_TOKEN)
         else:
             self.enabled = False
-
-    def start_worker(self):
-        threading.Thread(target=self.process_queue, daemon=True).start()
 
     def notify(self, message: Message):
         text_msg = message.build_text_notify()
@@ -78,11 +75,12 @@ class NotificationHandler:
         else:
             self.telebot.send_message(chat_id = self.config.TELEGRAM_PEER_ID, text=text_msg, parse_mode=message.format, link_preview_options=LinkPreviewOptions(is_disabled=True))
     def process_queue(self):
-        while True:
+        limit = self.config.NOTIFICATION_LIMIT
+        while self.queue.empty() == False and limit > 0:
             # message, attachments = self.queue.get()
             message = self.queue.get()
             self.notify(message)
-            self.queue.task_done()
+            limit -= 1
 
     def send_notification(self, message: Message, attachments=None):
         if self.enabled:

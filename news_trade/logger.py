@@ -5,9 +5,8 @@ from .config import Config
 
 class Logger:
     Logger = None
-    NotificationHandler = None
 
-    def __init__(self, config: Config, logging_service="crypto_trading", enable_notifications=True):
+    def __init__(self, config: Config, notificationHandler: NotificationHandler, logging_service="crypto_trading"):
         # Logger setup
         self.Logger = logging.getLogger(logging_service)
         self.Logger.setLevel(logging.DEBUG)
@@ -26,7 +25,7 @@ class Logger:
         self.Logger.addHandler(ch)
 
         # notification handler
-        self.NotificationHandler = NotificationHandler(config, enable_notifications)
+        self.NotificationHandler = notificationHandler
 
     def log(self, message, level="info", notification=True):
         if level == "info":

@@ -38,6 +38,10 @@ class Config:
                 "scrape_sleep_time": 60,
                 "list_channel_id": [],
                 "token": ""
+            },
+            "notification": {
+                "sleep_time": 10,
+                "limit": 5
             }
         }
         self.TWITTER_COOKIES_DICT = {}
@@ -86,6 +90,9 @@ class Config:
         self.DISCORD_SCRAPE_SLEEP_TIME = int(os.environ.get("DISCORD_SCRAPE_SLEEP_TIME") or config["discord"]["scrape_sleep_time"])
         self.DISCORD_LIST_CHANNEL_ID =  [channel.strip() for channel in os.environ.get("DISCORD_LIST_CHANNEL_ID", "").split() if channel.strip()] or config["discord"]["list_channel_id"]
         self.DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN") or config["discord"]["token"]
+
+        self.NOTIFICATION_SLEEP_TIME = int(os.environ.get("NOTIFICATION_SLEEP_TIME") or config["notification"]["sleep_time"])
+        self.NOTIFICATION_LIMIT = int(os.environ.get("NOTIFICATION_LIMIT") or config["notification"]["limit"])
     def beautify(self):
         response = vars(self).copy()
         response["platform"] = platform.system()
