@@ -154,7 +154,12 @@ class Threads:
         threads_post = []
         max_timestamp = 0
         for thread in response['threads']:
-            self.logger.info('Debug ' + str(thread) + ' - ' + str(time_now) + ' - ' + str(thread['published_on']))
+            msg = 'Debug ' + str(thread) + ' - timenow: ' + str(time_now) + ' - published_on: ' + str(thread['published_on']) + ' - map_timestamp: '
+            if username in self.map_last_timestamp:
+                msg += str(self.map_last_timestamp[username])
+            else:
+                msg += "None"
+            self.logger.info(msg)
             if time_now - thread['published_on'] > self.config.THREADS_SLA:
                 continue
             if username in self.map_last_timestamp and thread['published_on'] <= self.map_last_timestamp[username]:
