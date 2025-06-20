@@ -54,10 +54,6 @@ class Threads:
             msg = msg.replace('\u25a0', '')
             msg = remove_redundant_spaces(msg)
             self.logger.info(Message(title=f"Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=msg), False)
-            # start Playwright browser
-            pw = sync_playwright().start()
-            self.browser = pw.chromium.launch(chromium_sandbox=False)
-            self.context = self.browser.new_context(viewport={"width": 1920, "height": 1080})
     
     # Note: we'll also be using parse_thread function we wrote earlier:
 
@@ -187,6 +183,10 @@ class Threads:
     def scrape_user_posts(self):
         if self.config.THREADS_ENABLED == False:
             return
+        # start Playwright browser
+        pw = sync_playwright().start()
+        self.browser = pw.chromium.launch(chromium_sandbox=False)
+        self.context = self.browser.new_context(viewport={"width": 1920, "height": 1080})
         list_username = self.config.THREADS_LIST_USERNAME
         self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
         posts = []
@@ -194,3 +194,4 @@ class Threads:
             posts.extend(self.retrieve_user_posts(username))
         for post in posts:
             self.logger.info(post, True)
+        pw.stop()
