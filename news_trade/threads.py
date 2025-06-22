@@ -185,7 +185,7 @@ class Threads:
             return
         # start Playwright browser
         pw = sync_playwright().start()
-        self.browser = pw.chromium.launch(chromium_sandbox=False)
+        self.browser = pw.chromium.launch(chromium_sandbox=False, headless=True)
         self.context = self.browser.new_context(viewport={"width": 1920, "height": 1080})
         list_username = self.config.THREADS_LIST_USERNAME
         self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
