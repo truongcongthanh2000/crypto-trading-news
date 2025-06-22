@@ -121,8 +121,8 @@ class Threads:
 
             page.goto(url)
             # wait for page to finish loading
-            page.wait_for_selector("[data-pressable-container=true]")
-            # page.wait_for_load_state('load')
+            # page.wait_for_selector("[data-pressable-container=true]")
+            page.wait_for_load_state('load')
             selector = Selector(page.content())
             # find all hidden datasets
             hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
