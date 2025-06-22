@@ -48,7 +48,7 @@ class Threads:
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         if process.returncode != 0:
-            self.logger.error(Message(title=f"Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}', body=f'{stderr.decode('utf-8')}"), True)
+            self.logger.error(Message(title=f"Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=f"{stderr.decode('utf-8')}", chat_id=self.config.TELEGRAM_LOG_PEER_ID), True)
         else:
             msg = stdout.decode('utf-8') or 'Successful'
             msg = msg.replace('\u25a0', '')
@@ -150,7 +150,8 @@ class Threads:
             self.logger.error(Message(
                 title=f"Error Threads.scrape_profile - username={username}",
                 body=f"Error: {err=}", 
-                format=None
+                format=None,
+                chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), True)
             return parsed
 
@@ -174,7 +175,8 @@ class Threads:
             threads_post.append(Message(
                 body = f"{thread['text']}\n\n[Link: {thread['url']}]({thread['url']})",
                 title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}",
-                image=thread['images']
+                image=thread['images'],
+                chat_id=self.config.TELEGRAM_PEER_ID
             ))
         if max_timestamp > 0:
             self.map_last_timestamp[username] = max_timestamp

@@ -31,7 +31,8 @@ class Telegram:
             self.logger.error(Message(
                 title=f"Error Telegram.scrape_messages - {channel}",
                 body=f"Error: {err=}", 
-                format=None
+                format=None,
+                chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), True)
             messages = []
         if len(messages) > 0:
@@ -46,14 +47,16 @@ class Telegram:
                 self.logger.error(Message(
                     title=f"Error Telegram.forward_messages - {channel}",
                     body=f"Error: {err=}", 
-                    format=None
+                    format=None,
+                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
                 ))
                 for message in messages:
                     body = message.message
                     body += f"\n\n**[Link: https://t.me/{channel[1:]}/{message.id}](https://t.me/{channel[1:]}/{message.id})**"
                     self.logger.info(Message(
                         title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
-                        body=body
+                        body=body,
+                        chat_id=self.config.TELEGRAM_PEER_ID
                     ), True)
         messages = self.pull_messages(channel)
         if len(messages) > 0:
@@ -64,7 +67,8 @@ class Telegram:
                 self.logger.error(Message(
                     title=f"Error Telegram.forward_messages - {channel}",
                     body=f"Error: {err=}", 
-                    format=None
+                    format=None,
+                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
                 ), True)
     
     def scrape_channel_messages(self):

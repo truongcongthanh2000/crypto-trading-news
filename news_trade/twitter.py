@@ -37,7 +37,8 @@ class Twitter:
                 update_max_timestamp[user_id] = tweet_timestamp
             twitter_tweets.append(Message(
                 title= f"Twitter - {user_name} - Time: {datetime.fromtimestamp(tweet_timestamp, tz=pytz.timezone('Asia/Ho_Chi_Minh'))}",
-                body= f"{tweet.full_text}\n\n[Link: {url}]({url})"
+                body= f"{tweet.full_text}\n\n[Link: {url}]({url})",
+                chat_id=self.config.TELEGRAM_PEER_ID
             ))
         for user_id in update_max_timestamp:
             self.map_timestamp_by_user[user_id] = update_max_timestamp[user_id]
@@ -52,7 +53,8 @@ class Twitter:
             self.logger.error(Message(
                 title=f"Error Twitter.get_tweets - {query}",
                 body=f"Error: {err=}", 
-                format=None
+                format=None,
+                chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), True)
             tweets = []
             # loop.close()

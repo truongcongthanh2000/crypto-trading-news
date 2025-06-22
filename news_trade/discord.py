@@ -57,14 +57,15 @@ class Discord:
             self.logger.error(Message(
                 title=f"Error Discord.init",
                 body=f"Error: {err=}\nSo we must disabled discord", 
-                format=None
+                format=None,
+                chat_id=self.config.TELEGRAM_LOG_PEER_ID,
             ), True)
             self.config.DISCORD_ENABLED = False
 
     def build_message(self, message, channel_info, guild_info):
         message_timestamp = iso_to_unix(message['timestamp'])
         url = f"https://discord.com/channels/{guild_info['id']}/{channel_info['id']}/{message['id']}"
-        payload = Message(title= f"Discord - {guild_info['name']}-{channel_info['name']} - Time: {datetime.fromtimestamp(message_timestamp, tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body="")
+        payload = Message(title= f"Discord - {guild_info['name']}-{channel_info['name']} - Time: {datetime.fromtimestamp(message_timestamp, tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body="", chat_id=self.config.TELEGRAM_PEER_ID)
         def capture(message):
             payload.body = f"{message['content']}\n\n[Link: {url}]({url})"
             if 'attachments' in message and len(message['attachments']) > 0:
@@ -110,7 +111,8 @@ class Discord:
             self.logger.error(Message(
                 title=f"Error Discord.get_messages - {guild_info['name']}-{channel_info['name']}({channel_id})",
                 body=f"Error: {err=}", 
-                format=None
+                format=None,
+                chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), True)
         return []
 

@@ -16,7 +16,7 @@ def main():
     config = Config()
     notification = NotificationHandler(config)
     logger = Logger(config, notification, "news_trade_server")
-    logger.info(Message(title = f"Start News Trade - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=f"{json.dumps(config.beautify(), indent=2)}"), True)
+    logger.info(Message(title = f"Start News Trade - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=f"{json.dumps(config.beautify(), indent=2)}", chat_id=config.TELEGRAM_LOG_PEER_ID), True)
 
     twitter = Twitter(config, logger)
     threads = Threads(config, logger)
