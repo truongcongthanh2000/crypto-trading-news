@@ -67,7 +67,8 @@ class NotificationHandler:
                 print(datetime.datetime.now(), " - ERROR - ", Message(
                     title=f"Error Notification.send_photo, image={message.image}",
                     body=f"Error: {err=}", 
-                    format=None
+                    format=None,
+                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
                 ))
                 request = requests.get(message.image, stream=True)
                 with open("photo.png", "wb+") as file:
