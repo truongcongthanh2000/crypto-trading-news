@@ -10,7 +10,7 @@ from telebot import apihelper
 import requests
 import datetime
 class Message:
-    def __init__(self, body: str, chat_id: int, title = 'News Trade', format: str | None = "MarkdownV2", image: str | None = None, images: list[str] | None = None):
+    def __init__(self, body: str, chat_id: int = 0, title = 'News Trade', format: str | None = "MarkdownV2", image: str | None = None, images: list[str] | None = None):
         self.title = title
         self.body = body
         self.format = format
