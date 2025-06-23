@@ -119,10 +119,9 @@ class Threads:
             page = self.context.new_page()
             url = f'{self.BASE_URL}/@{username}'
 
-            page.goto(url)
+            page.goto(url, wait_until='domcontentloaded')
             # wait for page to finish loading
             # page.wait_for_selector("[data-pressable-container=true]")
-            page.wait_for_load_state('load', timeout=0)
             selector = Selector(page.content())
             # find all hidden datasets
             hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
