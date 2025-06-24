@@ -172,7 +172,7 @@ class Threads:
                 continue
             max_timestamp = max(max_timestamp, thread['published_on'])
             threads_post.append(Message(
-                body = f"{thread['text']}\n\n[Link: {thread['url']}]({thread['url']})",
+                body = f"{thread['text']}\n[Link: {thread['url']}]({thread['url']})\n\n`/ftrack_replies {thread['url']}?sort_order=recent`",
                 title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}",
                 image=thread['images'],
                 chat_id=self.config.TELEGRAM_PEER_ID
