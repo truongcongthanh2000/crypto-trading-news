@@ -116,35 +116,39 @@ class Threads:
         }
         try:
             # start Playwright browser
-            page = self.context.new_page()
-            url = f'{self.BASE_URL}/@{username}'
+            with sync_playwright() as pw:
+                # start Playwright browser
+                browser = pw.chromium.launch(chromium_sandbox=False)
+                context = browser.new_context(viewport={"width": 1920, "height": 1080})
+                page = context.new_page()
+                url = f'{self.BASE_URL}/@{username}'
 
-            page.goto(url, wait_until='domcontentloaded')
-            # wait for page to finish loading
-            # page.wait_for_selector("[data-pressable-container=true]")
-            selector = Selector(page.content())
-            # find all hidden datasets
-            hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
-            for hidden_dataset in hidden_datasets:
-                # skip loading datasets that clearly don't contain threads data
-                if '"ScheduledServerJS"' not in hidden_dataset:
-                    continue
-                is_profile = 'follower_count' in hidden_dataset
-                is_threads = 'thread_items' in hidden_dataset
-                if not is_profile and not is_threads:
-                    continue
-                data = json.loads(hidden_dataset)
-                if is_profile:
-                    user_data = nested_lookup('user', data)
-                    parsed['user'] = self.parse_profile(user_data[0])
-                if is_threads:
-                    thread_items = nested_lookup('thread_items', data)
-                    threads = [
-                        self.parse_thread(t) for thread in thread_items for t in thread
-                    ]
-                    parsed['threads'].extend(threads)
-            page.close()
-            return parsed
+                page.goto(url)
+                # wait for page to finish loading
+                page.wait_for_selector("[data-pressable-container=true]")
+                selector = Selector(page.content())
+                # find all hidden datasets
+                hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
+                for hidden_dataset in hidden_datasets:
+                    # skip loading datasets that clearly don't contain threads data
+                    if '"ScheduledServerJS"' not in hidden_dataset:
+                        continue
+                    is_profile = 'follower_count' in hidden_dataset
+                    is_threads = 'thread_items' in hidden_dataset
+                    if not is_profile and not is_threads:
+                        continue
+                    data = json.loads(hidden_dataset)
+                    if is_profile:
+                        user_data = nested_lookup('user', data)
+                        parsed['user'] = self.parse_profile(user_data[0])
+                    if is_threads:
+                        thread_items = nested_lookup('thread_items', data)
+                        threads = [
+                            self.parse_thread(t) for thread in thread_items for t in thread
+                        ]
+                        parsed['threads'].extend(threads)
+                return parsed
+            raise Exception(f"Cannot scrape profile threads")
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Threads.scrape_profile - username={username}",
@@ -171,7 +175,7 @@ class Threads:
             if username in self.map_last_timestamp and thread['published_on'] <= self.map_last_timestamp[username]:
                 continue
             max_timestamp = max(max_timestamp, thread['published_on'])
-            url = f"{thread[url]}?sort_order=recent"
+            url = f"{thread['url']}?sort_order=recent"
             threads_post.append(Message(
                 body = f"{thread['text']}\n[Link: {url}]({url})\n\n`/freplies {url}`",
                 title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}",
@@ -185,10 +189,6 @@ class Threads:
     def scrape_user_posts(self):
         if self.config.THREADS_ENABLED == False:
             return
-        # start Playwright browser
-        pw = sync_playwright().start()
-        self.browser = pw.chromium.launch(chromium_sandbox=False, headless=True)
-        self.context = self.browser.new_context(viewport={"width": 1920, "height": 1080})
         list_username = self.config.THREADS_LIST_USERNAME
         self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
         posts = []
@@ -196,4 +196,3 @@ class Threads:
             posts.extend(self.retrieve_user_posts(username))
         for post in posts:
             self.logger.info(post, True)
-        pw.stop()
