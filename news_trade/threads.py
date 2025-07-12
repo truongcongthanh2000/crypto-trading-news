@@ -177,11 +177,13 @@ class Threads:
                 continue
             max_timestamp = max(max_timestamp, thread['published_on'])
             url = f"{thread['url']}?sort_order=recent"
+            body=f"{thread['text']}\n[Link: {url}]({url})"
             chat_id = self.config.TELEGRAM_NEWS_PEER_ID
             if is_command_trade(thread['text']):
                 chat_id = self.config.TELEGRAM_TRADE_PEER_ID
+                body += f"\n\n`/freplies {url}`"
             threads_post.append(Message(
-                body = f"{thread['text']}\n[Link: {url}]({url})\n\n`/freplies {url}`",
+                body = body,
                 title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}",
                 image=thread['images'],
                 chat_id=chat_id
