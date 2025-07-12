@@ -63,11 +63,14 @@ class Telegram:
                 ))
                 for message in messages:
                     body = message.message
+                    chat_id = self.config.TELEGRAM_NEWS_PEER_ID
+                    if is_command_trade(message.message):
+                        chat_id = self.config.TELEGRAM_TRADE_PEER_ID
                     body += f"\n\n**[Link: https://t.me/{channel[1:]}/{message.id}](https://t.me/{channel[1:]}/{message.id})**"
                     self.logger.info(Message(
                         title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
                         body=body,
-                        chat_id=self.config.TELEGRAM_TRADE_PEER_ID
+                        chat_id=chat_id
                     ), True)
         messages = self.pull_messages(channel)
         if len(messages) > 0:
