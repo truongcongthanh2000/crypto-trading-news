@@ -6,6 +6,7 @@ from telethon.sessions import StringSession
 import asyncio
 from datetime import datetime, timedelta, timezone
 import pytz
+from .util import is_command_trade
 class Telegram:
     def __init__(self, config: Config, logger: Logger):
         self.config = config
@@ -42,7 +43,17 @@ class Telegram:
     def forward_messages(self, channel):
         async def forward(messages):
             try:
-                await self.client.forward_messages(self.config.TELEGRAM_PEER_ID, messages)
+                messages_news = []
+                messages_trade = []
+                for message in messages:
+                    if is_command_trade(message.message):
+                        messages_trade.append(message)
+                    else:
+                        messages_news.append(message)
+                if len(messages_trade) > 0:
+                    await self.client.forward_messages(self.config.TELEGRAM_TRADE_PEER_ID, messages_trade)
+                if len(messages_news) > 0:
+                    await self.client.forward_messages(self.config.TELEGRAM_NEWS_PEER_ID, messages_news)
             except Exception as err:
                 self.logger.error(Message(
                     title=f"Error Telegram.forward_messages - {channel}",
@@ -56,7 +67,7 @@ class Telegram:
                     self.logger.info(Message(
                         title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
                         body=body,
-                        chat_id=self.config.TELEGRAM_PEER_ID
+                        chat_id=self.config.TELEGRAM_TRADE_PEER_ID
                     ), True)
         messages = self.pull_messages(channel)
         if len(messages) > 0:

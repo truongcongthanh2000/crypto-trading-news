@@ -14,6 +14,7 @@ import pytz
 import subprocess
 import sys
 import re
+from .util import is_command_trade
 
 def remove_redundant_spaces(text: str):
     lines = text.split('\n')
@@ -176,11 +177,14 @@ class Threads:
                 continue
             max_timestamp = max(max_timestamp, thread['published_on'])
             url = f"{thread['url']}?sort_order=recent"
+            chat_id = self.config.TELEGRAM_NEWS_PEER_ID
+            if is_command_trade(thread['text']):
+                chat_id = self.config.TELEGRAM_TRADE_PEER_ID
             threads_post.append(Message(
                 body = f"{thread['text']}\n[Link: {url}]({url})\n\n`/freplies {url}`",
                 title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}",
                 image=thread['images'],
-                chat_id=self.config.TELEGRAM_PEER_ID
+                chat_id=chat_id
             ))
         if max_timestamp > 0:
             self.map_last_timestamp[username] = max_timestamp
