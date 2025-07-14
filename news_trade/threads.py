@@ -119,7 +119,7 @@ class Threads:
             # start Playwright browser
             with sync_playwright() as pw:
                 # start Playwright browser
-                browser = pw.chromium.launch(chromium_sandbox=False)
+                browser = pw.firefox.launch()
                 context = browser.new_context(viewport={"width": 1920, "height": 1080})
                 page = context.new_page()
                 url = f'{self.BASE_URL}/@{username}'
