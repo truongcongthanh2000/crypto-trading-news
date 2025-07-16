@@ -45,7 +45,7 @@ class Threads:
         self.logger = logger
         self.map_last_timestamp = {}
 
-        command = [sys.executable, "-m", "playwright", "install", "chromium"]
+        command = [sys.executable, "-m", "playwright", "install", "firefox"]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         if process.returncode != 0:
