@@ -45,7 +45,7 @@ class Threads:
         self.logger = logger
         self.map_last_timestamp = {}
 
-        command = [sys.executable, "-m", "playwright", "install", "firefox"]
+        command = [sys.executable, "-m", "playwright", "install", "chromium"]
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         if process.returncode != 0:
@@ -119,7 +119,7 @@ class Threads:
             # start Playwright browser
             with sync_playwright() as pw:
                 # start Playwright browser
-                browser = pw.firefox.launch()
+                browser = pw.chromium.launch(chromium_sandbox=False)
                 context = browser.new_context(viewport={"width": 1920, "height": 1080})
                 page = context.new_page()
                 url = f'{self.BASE_URL}/@{username}'
