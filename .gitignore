@@ -4,3 +4,4 @@ logs/news_trade_server.log
 cookies.json
 cookies_raw.json
 config/config_remote.yaml
+.venv
