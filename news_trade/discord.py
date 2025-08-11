@@ -60,7 +60,7 @@ class Discord:
                 body=f"Error: {err=}\nSo we must disabled discord", 
                 format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID,
-            ), True)
+            ), notification=True)
             self.config.DISCORD_ENABLED = False
 
     def build_message(self, message, channel_info, guild_info):
@@ -116,7 +116,7 @@ class Discord:
                 body=f"Error: {err=}", 
                 format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
         return []
 
     def scrape_channel_messages(self):
@@ -127,4 +127,4 @@ class Discord:
             messages.extend(self.get_messages(channel_id))
             time.sleep(randint(5, 10))
         for message in messages:
-            self.logger.info(message, True)
+            self.logger.info(message, notification=True)

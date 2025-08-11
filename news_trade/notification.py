@@ -1,14 +1,14 @@
-import queue
-import threading
-
 import json
+
 from .config import Config
 import telegramify_markdown
-import telebot
 from telebot.types import LinkPreviewOptions, InputMediaPhoto, InputFile
-from telebot import apihelper
-import requests
+from telebot import asyncio_helper
+from telebot.async_telebot import AsyncTeleBot
 import datetime
+import asyncio
+import aiohttp
+import aiofiles
 class Message:
     def __init__(self, body: str, chat_id: int = 0, title = 'News Trade', format: str | None = "MarkdownV2", image: str | None = None, images: list[str] | None = None):
         self.title = title
@@ -35,13 +35,14 @@ class NotificationHandler:
     def __init__(self, cfg: Config, enabled=True):
         if enabled:
             self.config = cfg
-            self.queue = queue.Queue()
+            self.queue = asyncio.Queue()
             self.enabled = True
-            self.telebot = telebot.TeleBot(token=cfg.TELEGRAM_BOT_TOKEN)
+            self.telebot = AsyncTeleBot(token=cfg.TELEGRAM_BOT_TOKEN)
         else:
             self.enabled = False
 
-    def notify(self, message: Message):
+    async def notify(self):
+        message = await self.queue.get()
         text_msg = message.build_text_notify()
         if message.format is not None:
             text_msg = telegramify_markdown.markdownify(text_msg)
@@ -57,35 +58,40 @@ class NotificationHandler:
                 else:
                     list_media.append(InputMediaPhoto(media=image))
             try:
-                self.telebot.send_media_group(chat_id = message.chat_id, media=list_media)
+                await self.telebot.send_media_group(chat_id = message.chat_id, media=list_media)
             except Exception as err:
-                self.telebot.send_message(chat_id = message.chat_id, text=text_msg + "\n" + f"Error send media group, err: {err}", parse_mode=message.format, link_preview_options=LinkPreviewOptions(is_disabled=True))
+                await self.telebot.send_message(chat_id = message.chat_id, text=text_msg + "\n" + f"Error send media group, err: {err}", parse_mode=message.format, link_preview_options=LinkPreviewOptions(is_disabled=True))
         elif message.image is not None and message.image != "":
             try:
-                self.telebot.send_photo(chat_id = message.chat_id, photo=message.image, caption = text_msg, parse_mode=message.format)
+                await self.telebot.send_photo(chat_id = message.chat_id, photo=message.image, caption = text_msg, parse_mode=message.format)
             except Exception as err:
-                print(datetime.datetime.now(), " - ERROR - ", Message(
-                    title=f"Error Notification.send_photo, image={message.image}",
-                    body=f"Error: {err=}", 
-                    format=None,
-                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                ))
-                request = requests.get(message.image, stream=True)
-                with open("photo.png", "wb+") as file:
-                    for c in request:
-                        file.write(c)
-                self.telebot.send_photo(chat_id = message.chat_id, photo=InputFile("photo.png"), caption = text_msg, parse_mode=message.format)
+                # print(datetime.datetime.now(), " - ERROR - ", Message(
+                #     title=f"Error Notification.send_photo, image={message.image}",
+                #     body=f"Error: {err=}", 
+                #     format=None,
+                #     chat_id=self.config.TELEGRAM_LOG_PEER_ID
+                # ))
+                # Async HTTP request
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(message.image) as resp:
+                        resp.raise_for_status()  # Raise exception for HTTP errors
+                        async with aiofiles.open("photo.png", "wb") as file:
+                            async for chunk in resp.content.iter_chunked(1024):
+                                await file.write(chunk)
+
+                # Async send photo
+                await self.telebot.send_photo(chat_id = message.chat_id, photo=InputFile("photo.png"), caption = text_msg, parse_mode=message.format)
         else:
-            self.telebot.send_message(chat_id = message.chat_id, text=text_msg, parse_mode=message.format, link_preview_options=LinkPreviewOptions(is_disabled=True))
-    def process_queue(self):
+            await self.telebot.send_message(chat_id = message.chat_id, text=text_msg, parse_mode=message.format, link_preview_options=LinkPreviewOptions(is_disabled=True))
+
+    async def process_queue(self):
         limit = self.config.NOTIFICATION_LIMIT
         while self.queue.empty() == False and limit > 0:
             # message, attachments = self.queue.get()
-            message = self.queue.get()
-            self.notify(message)
+            await self.notify()
             limit -= 1
 
     def send_notification(self, message: Message, attachments=None):
         if self.enabled:
-            self.queue.put(message)
+            self.queue.put_nowait(message)
             # self.queue.put((message, attachments or []))

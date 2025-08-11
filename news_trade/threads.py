@@ -49,12 +49,12 @@ class Threads:
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         if process.returncode != 0:
-            self.logger.error(Message(title=f"Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=f"{stderr.decode('utf-8')}", chat_id=self.config.TELEGRAM_LOG_PEER_ID), True)
+            self.logger.error(Message(title=f"Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=f"{stderr.decode('utf-8')}", chat_id=self.config.TELEGRAM_LOG_PEER_ID), notification=True)
         else:
             msg = stdout.decode('utf-8') or 'Successful'
             msg = msg.replace('\u25a0', '')
             msg = remove_redundant_spaces(msg)
-            self.logger.info(Message(title=f"Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=msg, chat_id=self.config.TELEGRAM_LOG_PEER_ID), False)
+            self.logger.info(Message(title=f"Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=msg, chat_id=self.config.TELEGRAM_LOG_PEER_ID))
     
     # Note: we'll also be using parse_thread function we wrote earlier:
 
@@ -156,7 +156,7 @@ class Threads:
                 body=f"Error: {err=}", 
                 format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
             return parsed
 
     def retrieve_user_posts(self, username: str) -> list[Message]:
@@ -201,4 +201,4 @@ class Threads:
         for username in list_username:
             posts.extend(self.retrieve_user_posts(username))
         for post in posts:
-            self.logger.info(post, True)
+            self.logger.info(post, notification=True)

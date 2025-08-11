@@ -55,7 +55,7 @@ class Twitter:
                 body=f"Error: {err=}", 
                 format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
             tweets = []
             # loop.close()
         return self.filter_tweets(tweets)
@@ -70,5 +70,5 @@ class Twitter:
             tweets.extend(self.get_tweets(query))
             time.sleep(randint(5, 10))
         for tweet in tweets:
-            self.logger.info(tweet, True)
+            self.logger.info(tweet, notification=True)
 

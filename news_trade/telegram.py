@@ -14,7 +14,7 @@ class Telegram:
         self.client = TelegramClient(StringSession(config.TELEGRAM_SESSION_STRING), config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH).start()
         self.map_offset_date = {}
 
-    def pull_messages(self, channel: str):
+    async def pull_messages(self, channel: str):
         async def get_messages():
             offset_date = datetime.now(tz=timezone.utc) - timedelta(seconds = self.config.TELEGRAM_SLA)    
             if channel in self.map_offset_date:
@@ -25,22 +25,21 @@ class Telegram:
                     return result
                 result.append(msg)
             return result
-        loop = asyncio.get_event_loop()
         try:
-            messages = loop.run_until_complete(get_messages())
+            messages = await get_messages()
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Telegram.scrape_messages - {channel}",
                 body=f"Error: {err=}", 
                 format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
             messages = []
         if len(messages) > 0:
             self.map_offset_date[channel] = messages[0].date
         return messages
     
-    def forward_messages(self, channel):
+    async def forward_messages(self, channel):
         async def forward(messages):
             try:
                 messages_news = []
@@ -71,23 +70,24 @@ class Telegram:
                         title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
                         body=body,
                         chat_id=chat_id
-                    ), True)
-        messages = self.pull_messages(channel)
+                    ), notification=True)
+                await asyncio.sleep(1)
+        messages = await self.pull_messages(channel)
         if len(messages) > 0:
-            loop = asyncio.get_event_loop()
             try:
-                loop.run_until_complete(forward(messages=messages))
+                await forward(messages=messages)
             except Exception as err:
                 self.logger.error(Message(
                     title=f"Error Telegram.forward_messages - {channel}",
                     body=f"Error: {err=}", 
                     format=None,
                     chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                ), True)
+                ), notification=True)
+        await asyncio.sleep(1)
     
-    def scrape_channel_messages(self):
+    async def scrape_channel_messages(self):
         if self.config.TELEGRAM_ENABLED == False:
             return
         # self.logger.info(Message(f"Telegram.scrape_channel_messages with list channel: {', '.join(self.config.TELEGRAM_LIST_CHANNEL)}"))
         for channel in self.config.TELEGRAM_LIST_CHANNEL:
-            self.forward_messages(channel)
+            await self.forward_messages(channel)

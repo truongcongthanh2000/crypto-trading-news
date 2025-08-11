@@ -1,4 +1,5 @@
 import logging.handlers
+import queue
 
 from .notification import NotificationHandler
 from .config import Config
@@ -6,48 +7,57 @@ from .config import Config
 class Logger:
     Logger = None
 
+    # Update: use async logging to improve performence, log messages are queued and processed in a separate thread.
     def __init__(self, config: Config, notificationHandler: NotificationHandler, logging_service="crypto_trading"):
         # Logger setup
+        log_queue = queue.SimpleQueue() # shared Queue, infinite size
+        queue_handler = logging.handlers.QueueHandler(log_queue)
         self.Logger = logging.getLogger(logging_service)
-        self.Logger.setLevel(logging.DEBUG)
+        self.Logger.setLevel(logging.INFO)
         self.Logger.propagate = False
+        self.Logger.addHandler(queue_handler)
+
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         # default is "logs/crypto_trading.log"
         fh = logging.FileHandler(f"logs/{logging_service}.log")
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
-        self.Logger.addHandler(fh)
+        # self.Logger.addHandler(fh)
 
         # logging to console
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
-        ch.setFormatter(formatter)
-        self.Logger.addHandler(ch)
+        sh = logging.StreamHandler()
+        sh.setLevel(logging.INFO)
+        sh.setFormatter(formatter)
+        # self.Logger.addHandler(ch)
 
+        queue_listener = logging.handlers.QueueListener(
+            log_queue, fh, sh
+        )
+        queue_listener.start()
         # notification handler
         self.NotificationHandler = notificationHandler
 
-    def log(self, message, level="info", notification=True):
-        if level == "info":
-            self.Logger.info(str(message))
-        elif level == "warning":
-            self.Logger.warning(str(message))
-        elif level == "error":
-            self.Logger.error(str(message))
-        elif level == "debug":
-            self.Logger.debug(str(message))
+    def log(self, level, msg, *args, **kwargs):
+        # Extract `notification` if provided, default False
+        notification = kwargs.pop("notification", False)
 
+        # Call the actual logger method
+        log_method = getattr(self.Logger, level.lower(), None)
+        if callable(log_method):
+            log_method(str(msg), *args, **kwargs)
+
+        # Optional notification
         if notification and self.NotificationHandler.enabled:
-            self.NotificationHandler.send_notification(message)
+            self.NotificationHandler.send_notification(msg)
 
-    def info(self, message, notification=False):
-        self.log(message, "info", notification)
+    def info(self, msg, *args, **kwargs):
+        self.log("info", msg, *args, **kwargs)
 
-    def warning(self, message, notification=False):
-        self.log(message, "warning", notification)
+    def warning(self, msg, *args, **kwargs):
+        self.log("warning", msg, *args, **kwargs)
 
-    def error(self, message, notification=False):
-        self.log(message, "error", notification)
+    def error(self, msg, *args, **kwargs):
+        self.log("error", msg, *args, **kwargs)
 
-    def debug(self, message, notification=False):
-        self.log(message, "debug", notification)
+    def debug(self, msg, *args, **kwargs):
+        self.log("debug", msg, *args, **kwargs)
