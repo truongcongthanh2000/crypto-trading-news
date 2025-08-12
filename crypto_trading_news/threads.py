@@ -186,16 +186,11 @@ class Threads:
         # start Playwright browser
         async with async_playwright() as pw:
             # start Playwright browser
-            browser = await pw.chromium.launch(chromium_sandbox=False)
+            browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
             context = await browser.new_context(viewport={"width": 1920, "height": 1080})
             # Prepare all tasks concurrently
-            tasks = [
-                self.retrieve_user_posts(username, context)
-                for username in list_username
-            ]
-
-            # Run all profile scrapes in parallel
-            await asyncio.gather(*tasks)
+            for username in list_username:
+                await self.retrieve_user_posts(username, context)
 
             await context.close()
             await browser.close()
