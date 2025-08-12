@@ -1,1 +1,1 @@
-bot: python -m news_trade
+bot: python -m crypto_trading_news
