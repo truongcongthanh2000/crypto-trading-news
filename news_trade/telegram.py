@@ -11,8 +11,11 @@ class Telegram:
     def __init__(self, config: Config, logger: Logger):
         self.config = config
         self.logger = logger
-        self.client = TelegramClient(StringSession(config.TELEGRAM_SESSION_STRING), config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH).start()
+        self.client = TelegramClient(StringSession(config.TELEGRAM_SESSION_STRING), config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH)
         self.map_offset_date = {}
+
+    async def connect(self):
+        await self.client.start()
 
     async def pull_messages(self, channel: str):
         async def get_messages():

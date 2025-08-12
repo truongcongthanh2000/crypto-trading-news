@@ -26,12 +26,18 @@ class Config:
                 "trade_peer_id": -1,
                 "news_peer_id": -1,
                 "log_peer_id": -1,
+                "group_chat_id": -1,
+                "pnl_chat_id": 0,
+                "roi_signal": 10,
+                "alert_chat_id": -1,
                 "list_channel": [],
                 "limit": 10,
                 "sla": 600,
                 "scrape_sleep_time": 30,
                 "enabled": False,
-                "bot_token": ""
+                "bot_token": "",
+                "bot_trading_token": "",
+                "me": ""
             },
             "discord": {
                 "enabled": False,
@@ -44,7 +50,11 @@ class Config:
             "notification": {
                 "sleep_time": 10,
                 "limit": 5
-            }
+            },
+            "proxies": {
+                "nscriptiod_http": "",
+                "nscriptiod_https": ""
+            },
         }
         self.TWITTER_COOKIES_DICT = {}
         if os.path.exists("config/config_remote.yaml"):
@@ -75,6 +85,10 @@ class Config:
         self.TELEGRAM_TRADE_PEER_ID = int(os.environ.get("TELEGRAM_TRADE_PEER_ID") or config["telegram"]["trade_peer_id"])
         self.TELEGRAM_NEWS_PEER_ID = int(os.environ.get("TELEGRAM_NEWS_PEER_ID") or config["telegram"]["news_peer_id"])
         self.TELEGRAM_LOG_PEER_ID = int(os.environ.get("TELEGRAM_LOG_PEER_ID") or config["telegram"]["log_peer_id"])
+        self.TELEGRAM_ALERT_CHAT_ID = int(os.environ.get("TELEGRAM_ALERT_CHAT_ID") or config["telegram"]["alert_chat_id"])
+        self.TELEGRAM_GROUP_CHAT_ID = int(os.environ.get("TELEGRAM_GROUP_CHAT_ID") or config["telegram"]["group_chat_id"])
+        self.TELEGRAM_PNL_CHAT_ID = int(os.environ.get("TELEGRAM_PNL_CHAT_ID") or config["telegram"]["pnl_chat_id"])
+        self.TELEGRAM_ROI_SIGNAL = int(os.environ.get("TELEGRAM_ROI_SIGNAL") or config["telegram"]["roi_signal"])
         self.TELEGRAM_LIST_CHANNEL = [channel.strip() for channel in os.environ.get("TELEGRAM_LIST_CHANNEL", "").split() if channel.strip()] or config["telegram"]["list_channel"]
         self.TELEGRAM_LIMIT = int(os.environ.get("TELEGRAM_LIMIT") or config["telegram"]["limit"])
         self.TELEGRAM_SLA = int(os.environ.get("TELEGRAM_SLA") or config["telegram"]["sla"])
@@ -84,6 +98,8 @@ class Config:
         else:
             self.TELEGRAM_ENABLED = config["telegram"]["enabled"]
         self.TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN") or config["telegram"]["bot_token"]
+        self.TELEGRAM_BOT_TRADING_TOKEN = os.environ.get("TELEGRAM_BOT_TRADING_TOKEN") or config["telegram"]["bot_trading_token"]
+        self.TELEGRAM_ME = os.environ.get("TELEGRAM_ME") or config["telegram"]["me"]
 
         if "DISCORD_ENABLED" in os.environ:
             self.DISCORD_ENABLED = os.environ.get("DISCORD_ENABLED").lower() == "true"
@@ -97,6 +113,14 @@ class Config:
 
         self.NOTIFICATION_SLEEP_TIME = int(os.environ.get("NOTIFICATION_SLEEP_TIME") or config["notification"]["sleep_time"])
         self.NOTIFICATION_LIMIT = int(os.environ.get("NOTIFICATION_LIMIT") or config["notification"]["limit"])
+
+        self.BINANCE_API_KEY = os.environ.get("BINANCE_API_KEY") or config["binance"]["api_key"]
+        self.BINANCE_API_SECRET = os.environ.get("BINANCE_API_SECRET") or config["binance"]["api_secret"]
+        self.BINANCE_TLD = os.environ.get("BINANCE_TLD") or config["binance"]["tld"]
+        self.PROXIES = {
+            "http": os.environ.get(os.environ.get("HTTP_FIELD") or "HTTP_FIELD") or config["proxies"]["nscriptiod_http"],
+            "https": os.environ.get(os.environ.get("HTTPS_FIELD") or "HTTPS_FIELD") or config["proxies"]["nscriptiod_https"]
+        }
     def beautify(self):
         response = vars(self).copy()
         response["platform"] = platform.system()
@@ -104,4 +128,6 @@ class Config:
         response["TWITTER_COOKIES_DICT"] = "{.....}"
         response["TELEGRAM_SESSION_STRING"] = "...."
         response["DISCORD_TOKEN"] = "...."
+        response["BINANCE_API_KEY"] = "...."
+        response["BINANCE_API_SECRET"] = "...."
         return response
