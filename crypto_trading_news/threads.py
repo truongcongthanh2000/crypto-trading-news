@@ -11,7 +11,6 @@ from .config import Config
 from .notification import Message
 from datetime import datetime
 import pytz
-import subprocess
 import sys
 import re
 from .util import is_command_trade
@@ -46,17 +45,6 @@ class Threads:
         self.logger = logger
         self.map_last_timestamp = {}
 
-        command = [sys.executable, "-m", "playwright", "install", "chromium"]
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
-        if process.returncode != 0:
-            self.logger.error(Message(title=f"Error installing Playwright - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=f"{stderr.decode('utf-8')}", chat_id=self.config.TELEGRAM_LOG_PEER_ID), notification=True)
-        else:
-            msg = stdout.decode('utf-8') or 'Successful'
-            msg = msg.replace('\u25a0', '')
-            msg = remove_redundant_spaces(msg)
-            self.logger.info(Message(title=f"Playwright installation successful - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body=msg, chat_id=self.config.TELEGRAM_LOG_PEER_ID))
-    
     # Note: we'll also be using parse_thread function we wrote earlier:
 
     def parse_thread(self, data: Dict) -> Dict:

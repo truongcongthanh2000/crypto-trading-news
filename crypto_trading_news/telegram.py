@@ -87,5 +87,11 @@ class Telegram:
         if self.config.TELEGRAM_ENABLED == False:
             return
         # self.logger.info(Message(f"Telegram.scrape_channel_messages with list channel: {', '.join(self.config.TELEGRAM_LIST_CHANNEL)}"))
-        for channel in self.config.TELEGRAM_LIST_CHANNEL:
-            await self.forward_messages(channel)
+        # Prepare all tasks concurrently
+        tasks = [
+            self.forward_messages(channel)
+            for channel in self.config.TELEGRAM_LIST_CHANNEL
+        ]
+
+        # Run all profile scrapes in parallel
+        await asyncio.gather(*tasks)
