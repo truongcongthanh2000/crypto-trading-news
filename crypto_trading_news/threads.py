@@ -15,6 +15,8 @@ import sys
 import re
 from .util import is_command_trade
 import asyncio
+import os
+import psutil
 
 def remove_redundant_spaces(text: str):
     lines = text.split('\n')
@@ -44,6 +46,20 @@ class Threads:
         self.config = config
         self.logger = logger
         self.map_last_timestamp = {}
+        self.process = psutil.Process(os.getpid())
+
+    def log_resources(self, note=""):
+        mem_mb = self.process.memory_info().rss / (1024 * 1024)
+        cpu_percent = self.process.cpu_percent(interval=None)
+        net_io = self.process.net_io_counters() if hasattr(self.process, "net_io_counters") else None
+
+        net_info = ""
+        if net_io:
+            net_info = f", Net: sent={net_io.bytes_sent/1024:.1f} KB, recv={net_io.bytes_recv/1024:.1f} KB"
+
+        self.logger.info(
+            f"[Resources] {note} - CPU: {cpu_percent:.1f}% | RAM: {mem_mb:.2f} MB{net_info}"
+        )
 
     # Note: we'll also be using parse_thread function we wrote earlier:
 
@@ -182,15 +198,21 @@ class Threads:
         if self.config.THREADS_ENABLED == False:
             return
         list_username = self.config.THREADS_LIST_USERNAME
-        self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
+        # self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
         # start Playwright browser
+        self.log_resources("Before Playwright start")
         async with async_playwright() as pw:
             # start Playwright browser
             browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
             context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+            self.log_resources("After browser start")
             # Prepare all tasks concurrently
             for username in list_username:
                 await self.retrieve_user_posts(username, context)
+            
+            self.log_resources("After scraping all users")
 
             await context.close()
             await browser.close()
+
+            self.log_resources("After browser close")
