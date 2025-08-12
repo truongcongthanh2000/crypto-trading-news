@@ -1,29 +1,61 @@
-# Social Trading News Crawler Bot
+# 📈 Social Trading News Crawler & Command Trading Bot
 
-This bot is designed to automatically collect and organize news and information relevant to social trading platforms and related financial markets. It continuously monitors various online sources to provide users with a consolidated feed of potentially valuable insights.
+This project contains **two complementary tools** for cryptocurrency and financial markets:
 
-## Features
+1. **Social Trading News Crawler Bot** – Automatically collects and organizes market news from multiple online sources.  
+2. **Command Trading Bot** – A CLI-based trading bot for automating cryptocurrency trades.
 
-* **Real-time crawler:** The bot actively crawls news websites, blogs, forums, and social media platforms such as [Threads](https://www.threads.com/), [Twitter](https://x.com/home), [Telegram](https://telegram.org/), and [Discord](https://discord.com/) that discuss social trading, financial markets, and investment strategies.
-* **Real-time notify:** The bot will auto notify into telegram after crawls news.
+---
 
-## Getting Started
+## 🚀 Features
 
-- This repo is developed on Python version >= 3.10
-- **Clone this repo**:  https://github.com/truongcongthanh2000/news_trade
-- Add file config
-    - Setup bot telegram and chat_id [how to get chat_id telegram](https://gist.github.com/nafiesl/4ad622f344cd1dc3bb1ecbe468ff9f8a)
-    - Create new file config_remote.yaml and fill all fields
-- Install all dependencies ```pip3 install -r requirements.txt```
-- Run code ```python3 -m news_trade```
+### **Social Trading News Crawler Bot**
+- **Real-time crawler**: Monitors news websites, blogs, forums, and social media (Threads, Twitter/X, Telegram, Discord) for discussions about social trading, markets, and investment strategies.
+- **Real-time Telegram notifications**: Automatically sends alerts to your Telegram after crawling news.
+
+### **Command Trading Bot**
+- **Command-Line Interface**: Simple commands to control the bot.
+- **Exchange Support**: Currently supports **Binance**.
+- **Live Market Data**: Fetches real-time price data for trading decisions.
+- **Risk Management**: Set stop-loss and take-profit levels.
+- **Trade Notifications**: Alerts for trades and market events.
+
+---
+
+## 🛠 Getting Started
+
+### 1️⃣ Prerequisites
+- Python **>= 3.10**
+- Telegram bot & chat ID ([Guide](https://gist.github.com/nafiesl/4ad622f344cd1dc3bb1ecbe468ff9f8a))
+
+---
+
+### 2️⃣ Install & Run
+
+```bash
+# Clone repository
+git clone https://github.com/truongcongthanh2000/news_trade
+cd news_trade
+
+# Create config
+cp config_remote.example.yaml config_remote.yaml
+# Fill required fields in config_remote.yaml
+
+# Install dependencies
+pip3 install -r requirements.txt
+
+# Run
+python3 -m news_trade
+```
 
 ## Deployment
 In this project, I use [Heroku](https://www.heroku.com/) as cloud platform for deployment. Here is the config 
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
     - heroku/python
     - https://github.com/playwright-community/heroku-playwright-buildpack.git
-- Region: **Europe**
+- Region: **Europe** (**Note: Avoid choose USA because lack of support API from binance.us**)
 - Stack: **heroku-22** (**Note: Do not use latest version heroku-24 because of incompatible with playwright**)
+- Add-ons: **[Fixie](https://elements.heroku.com/addons/fixie)** for forward-proxy to binance APIs.
 
 ## Disclaimer
 
