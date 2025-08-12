@@ -34,18 +34,18 @@ This project contains **two complementary tools** for cryptocurrency and financi
 
 ```bash
 # Clone repository
-git clone https://github.com/truongcongthanh2000/news_trade
-cd news_trade
+git clone https://github.com/truongcongthanh2000/crypto-trading-news
+cd crypto-trading-news
 
 # Create config
-cp config_remote.example.yaml config_remote.yaml
+cp config_remote.yaml.cfg config_remote.yaml
 # Fill required fields in config_remote.yaml
 
 # Install dependencies
 pip3 install -r requirements.txt
 
 # Run
-python3 -m news_trade
+python3 -m crypto_trading_news
 ```
 
 ## Deployment
