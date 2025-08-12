@@ -5,6 +5,7 @@ from typing import Dict
 import jmespath
 from parsel import Selector
 from playwright.sync_api import sync_playwright
+from playwright.sync_api import Browser
 from nested_lookup import nested_lookup
 from .logger import Logger
 from .config import Config
@@ -109,47 +110,42 @@ class Threads:
 
 
 
-    def scrape_profile(self, username: str) -> dict:
+    def scrape_profile(self, username: str, browser: Browser) -> dict:
         """Scrape Threads profile and their recent posts from a given URL"""
         parsed = {
             "user": {},
             "threads": [],
         }
         try:
-            # start Playwright browser
-            with sync_playwright() as pw:
-                # start Playwright browser
-                browser = pw.chromium.launch(chromium_sandbox=False)
-                context = browser.new_context(viewport={"width": 1920, "height": 1080})
-                page = context.new_page()
-                url = f'{self.BASE_URL}/@{username}'
+            context = browser.new_context(viewport={"width": 1920, "height": 1080})
+            page = context.new_page()
+            url = f'{self.BASE_URL}/@{username}'
 
-                page.goto(url)
-                # wait for page to finish loading
-                page.wait_for_selector("[data-pressable-container=true]", timeout=60000)
-                selector = Selector(page.content())
-                # find all hidden datasets
-                hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
-                for hidden_dataset in hidden_datasets:
-                    # skip loading datasets that clearly don't contain threads data
-                    if '"ScheduledServerJS"' not in hidden_dataset:
-                        continue
-                    is_profile = 'follower_count' in hidden_dataset
-                    is_threads = 'thread_items' in hidden_dataset
-                    if not is_profile and not is_threads:
-                        continue
-                    data = json.loads(hidden_dataset)
-                    if is_profile:
-                        user_data = nested_lookup('user', data)
-                        parsed['user'] = self.parse_profile(user_data[0])
-                    if is_threads:
-                        thread_items = nested_lookup('thread_items', data)
-                        threads = [
-                            self.parse_thread(t) for thread in thread_items for t in thread
-                        ]
-                        parsed['threads'].extend(threads)
-                return parsed
-            raise Exception(f"Cannot scrape profile threads")
+            page.goto(url)
+            # wait for page to finish loading
+            page.wait_for_selector("[data-pressable-container=true]", timeout=60000)
+            selector = Selector(page.content())
+            # find all hidden datasets
+            hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
+            for hidden_dataset in hidden_datasets:
+                # skip loading datasets that clearly don't contain threads data
+                if '"ScheduledServerJS"' not in hidden_dataset:
+                    continue
+                is_profile = 'follower_count' in hidden_dataset
+                is_threads = 'thread_items' in hidden_dataset
+                if not is_profile and not is_threads:
+                    continue
+                data = json.loads(hidden_dataset)
+                if is_profile:
+                    user_data = nested_lookup('user', data)
+                    parsed['user'] = self.parse_profile(user_data[0])
+                if is_threads:
+                    thread_items = nested_lookup('thread_items', data)
+                    threads = [
+                        self.parse_thread(t) for thread in thread_items for t in thread
+                    ]
+                    parsed['threads'].extend(threads)
+            return parsed
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Threads.scrape_profile - username={username}",
@@ -159,8 +155,8 @@ class Threads:
             ), notification=True)
             return parsed
 
-    def retrieve_user_posts(self, username: str) -> list[Message]:
-        response = self.scrape_profile(username)
+    def retrieve_user_posts(self, username: str, browser: Browser) -> list[Message]:
+        response = self.scrape_profile(username, browser)
         time_now = int(time.time())
         threads_post = []
         max_timestamp = 0
@@ -198,7 +194,11 @@ class Threads:
         list_username = self.config.THREADS_LIST_USERNAME
         self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
         posts = []
-        for username in list_username:
-            posts.extend(self.retrieve_user_posts(username))
+        # start Playwright browser
+        with sync_playwright() as pw:
+            # start Playwright browser
+            browser = pw.chromium.launch(chromium_sandbox=False)
+            for username in list_username:
+                posts.extend(self.retrieve_user_posts(username, browser))
         for post in posts:
             self.logger.info(post, notification=True)

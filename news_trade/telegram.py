@@ -40,19 +40,11 @@ class Telegram:
         return messages
     
     async def forward_messages(self, channel):
-        async def forward(messages):
+        async def forward(messages, channel_id):
+            if len(messages) == 0:
+                return
             try:
-                messages_news = []
-                messages_trade = []
-                for message in messages:
-                    if is_command_trade(message.message):
-                        messages_trade.append(message)
-                    else:
-                        messages_news.append(message)
-                if len(messages_trade) > 0:
-                    await self.client.forward_messages(self.config.TELEGRAM_TRADE_PEER_ID, messages_trade)
-                if len(messages_news) > 0:
-                    await self.client.forward_messages(self.config.TELEGRAM_NEWS_PEER_ID, messages_news)
+                await self.client.forward_messages(channel_id, messages)
             except Exception as err:
                 self.logger.error(Message(
                     title=f"Error Telegram.forward_messages - {channel}",
@@ -62,29 +54,32 @@ class Telegram:
                 ))
                 for message in messages:
                     body = message.message
-                    chat_id = self.config.TELEGRAM_NEWS_PEER_ID
-                    if is_command_trade(message.message):
-                        chat_id = self.config.TELEGRAM_TRADE_PEER_ID
                     body += f"\n\n**[Link: https://t.me/{channel[1:]}/{message.id}](https://t.me/{channel[1:]}/{message.id})**"
                     self.logger.info(Message(
                         title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
                         body=body,
-                        chat_id=chat_id
+                        chat_id=channel_id
                     ), notification=True)
                 await asyncio.sleep(1)
         messages = await self.pull_messages(channel)
-        if len(messages) > 0:
-            try:
-                await forward(messages=messages)
-            except Exception as err:
-                self.logger.error(Message(
-                    title=f"Error Telegram.forward_messages - {channel}",
-                    body=f"Error: {err=}", 
-                    format=None,
-                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                ), notification=True)
-        await asyncio.sleep(1)
-    
+        messages_news = []
+        messages_trade = []
+        for message in messages:
+            if is_command_trade(message.message):
+                messages_trade.append(message)
+            else:
+                messages_news.append(message)
+        try:
+            await forward(messages_trade, self.config.TELEGRAM_TRADE_PEER_ID)
+            await forward(messages_news, self.config.TELEGRAM_NEWS_PEER_ID)
+        except Exception as err:
+            self.logger.error(Message(
+                title=f"Error Telegram.forward_messages - {channel}",
+                body=f"Error: {err=}", 
+                format=None,
+                chat_id=self.config.TELEGRAM_LOG_PEER_ID
+            ), notification=True)
+
     async def scrape_channel_messages(self):
         if self.config.TELEGRAM_ENABLED == False:
             return
