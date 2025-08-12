@@ -41,8 +41,7 @@ class NotificationHandler:
         else:
             self.enabled = False
 
-    async def notify(self):
-        message = await self.queue.get()
+    async def notify(self, message: Message):
         text_msg = message.build_text_notify()
         if message.format is not None:
             text_msg = telegramify_markdown.markdownify(text_msg)
@@ -85,11 +84,9 @@ class NotificationHandler:
             await self.telebot.send_message(chat_id = message.chat_id, text=text_msg, parse_mode=message.format, link_preview_options=LinkPreviewOptions(is_disabled=True))
 
     async def process_queue(self):
-        limit = self.config.NOTIFICATION_LIMIT
-        while self.queue.empty() == False and limit > 0:
-            # message, attachments = self.queue.get()
-            await self.notify()
-            limit -= 1
+        while True:
+            message: Message = await self.queue.get()
+            await self.notify(message)
 
     def send_notification(self, message: Message, attachments=None):
         if self.enabled:
