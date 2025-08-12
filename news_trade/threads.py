@@ -3,9 +3,8 @@ import time
 from typing import Dict
 
 import jmespath
-from parsel import Selector
-from playwright.sync_api import sync_playwright
-from playwright.sync_api import Browser
+from playwright.async_api import async_playwright
+from playwright.async_api import BrowserContext
 from nested_lookup import nested_lookup
 from .logger import Logger
 from .config import Config
@@ -16,6 +15,7 @@ import subprocess
 import sys
 import re
 from .util import is_command_trade
+import asyncio
 
 def remove_redundant_spaces(text: str):
     lines = text.split('\n')
@@ -110,23 +110,25 @@ class Threads:
 
 
 
-    def scrape_profile(self, username: str, browser: Browser) -> dict:
+    async def scrape_profile(self, username: str, context: BrowserContext) -> dict:
         """Scrape Threads profile and their recent posts from a given URL"""
         parsed = {
             "user": {},
             "threads": [],
         }
         try:
-            context = browser.new_context(viewport={"width": 1920, "height": 1080})
-            page = context.new_page()
+            page = await context.new_page()
             url = f'{self.BASE_URL}/@{username}'
 
-            page.goto(url)
+            await page.goto(url)
             # wait for page to finish loading
-            page.wait_for_selector("[data-pressable-container=true]")
-            selector = Selector(page.content())
-            # find all hidden datasets
-            hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
+            await page.wait_for_selector("[data-pressable-container=true]")
+            
+            # Directly grab all JSON blobs without parsing the whole DOM
+            hidden_datasets = await page.eval_on_selector_all(
+                'script[type="application/json"][data-sjs]',
+                'els => els.map(e => e.textContent)'
+            )
             for hidden_dataset in hidden_datasets:
                 # skip loading datasets that clearly don't contain threads data
                 if '"ScheduledServerJS"' not in hidden_dataset:
@@ -145,6 +147,7 @@ class Threads:
                         self.parse_thread(t) for thread in thread_items for t in thread
                     ]
                     parsed['threads'].extend(threads)
+            await page.close()
             return parsed
         except Exception as err:
             self.logger.error(Message(
@@ -155,10 +158,9 @@ class Threads:
             ), notification=True)
             return parsed
 
-    def retrieve_user_posts(self, username: str, browser: Browser) -> list[Message]:
-        response = self.scrape_profile(username, browser)
+    async def retrieve_user_posts(self, username: str, context: BrowserContext) -> list[Message]:
+        response = await self.scrape_profile(username, context)
         time_now = int(time.time())
-        threads_post = []
         max_timestamp = 0
         for thread in response['threads']:
             # msg = 'Debug ' + str(thread) + ' - timenow: ' + str(time_now) + ' - published_on: ' + str(thread['published_on']) + ' - map_timestamp: '
@@ -178,27 +180,34 @@ class Threads:
             if is_command_trade(thread['text']):
                 chat_id = self.config.TELEGRAM_TRADE_PEER_ID
                 body += f"\n\n`/freplies {url}`"
-            threads_post.append(Message(
+            message = Message(
                 body = body,
                 title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}",
                 image=thread['images'],
                 chat_id=chat_id
-            ))
+            )
+            self.logger.info(message, notification=True)
         if max_timestamp > 0:
             self.map_last_timestamp[username] = max_timestamp
-        return threads_post
     
-    def scrape_user_posts(self):
+    async def scrape_user_posts(self):
         if self.config.THREADS_ENABLED == False:
             return
         list_username = self.config.THREADS_LIST_USERNAME
         self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
-        posts = []
         # start Playwright browser
-        with sync_playwright() as pw:
+        async with async_playwright() as pw:
             # start Playwright browser
-            browser = pw.chromium.launch(chromium_sandbox=False)
-            for username in list_username:
-                posts.extend(self.retrieve_user_posts(username, browser))
-        for post in posts:
-            self.logger.info(post, notification=True)
+            browser = await pw.chromium.launch(chromium_sandbox=False)
+            context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+            # Prepare all tasks concurrently
+            tasks = [
+                self.retrieve_user_posts(username, context)
+                for username in list_username
+            ]
+
+            # Run all profile scrapes in parallel
+            await asyncio.gather(*tasks)
+
+            await context.close()
+            await browser.close()
