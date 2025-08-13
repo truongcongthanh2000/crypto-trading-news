@@ -47,7 +47,7 @@ class Threads:
         self.process = psutil.Process(os.getpid())
 
     async def setup_browser(self):
-        self.browser: Browser = await launch(defaultViewport={"width": 1920, "height": 1080}, autoClose=False)
+        self.browser: Browser = await launch(defaultViewport={"width": 1920, "height": 1080}, autoClose=False, args=['--no-sandbox', '--headless', '--disable-gpu'])
 
     def log_resources(self, note=""):
         mem_mb = self.process.memory_info().rss / (1024 * 1024)
