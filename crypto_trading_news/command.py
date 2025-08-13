@@ -637,20 +637,22 @@ class Command:
         info = "**SPOT Account**\n"
         for balance in account_info["balances"]:
             coin = balance["asset"]
-            free_price = float(balance["free"])
-            locked_price = float(balance["locked"])
-            if free_price + locked_price <= EPS:
+            qty = float(balance["free"]) + float(balance["locked"])
+            if qty <= EPS:
                 continue
-            total_balance += free_price + locked_price
             message = ""
             if coin == "USDT":
-                message = "USDT: $%.2f" % round(free_price + locked_price, 2)
+                message = "**USDT: $%.2f**" % round(qty, 2)
+                total_balance += qty
             else:
-                message = f"[{coin}](https://www.binance.com/en/trade/{coin}_USDT?type=spot): ${free_price + locked_price:.2f}"
+                price = self.binance_api.get_ticker_price(coin + "USDT")
+                balance = qty * price
+                total_balance += balance
+                message = f"**[{coin}](https://www.binance.com/en/trade/{coin}_USDT?type=spot): ${balance:.2f}, qty: {qty:.2f}, price: {price}**"
             message += "\n"
             info += message
         info += "\n"
-        info += f"**Total balance**: {total_balance:.2f}"
+        info += f"**Total balance: ${total_balance:.2f}**"
         return info
     
     def info_future(self, skip_info_when_no_positions: bool = False):
