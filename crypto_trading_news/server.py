@@ -9,22 +9,8 @@ from .notification import NotificationHandler
 import asyncio
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
-from telegram import Update
 from .binance_api import BinanceAPI
 from .command import Command
-
-import subprocess
-import sys
-def ensure_playwright_installed():
-    try:
-        # Only check once at startup
-        subprocess.run(
-            [sys.executable, "-m", "playwright", "install", "chromium"],
-            check=True
-        )
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to install Playwright: {e}")
-        sys.exit(1)
 
 async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twitter, telegram: Telegram, discord: Discord, notification: NotificationHandler, command: Command):
     scheduler = AsyncIOScheduler(logger=logger)
@@ -59,6 +45,7 @@ async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twi
     async with application:
         await application.start()
         await command.post_init(application)
+        await threads.setup_browser()
         await telegram.connect()
 
         await asyncio.gather(
@@ -72,9 +59,6 @@ async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twi
     scheduler.shutdown()
 
 def main():
-    # Install Playwright only once
-    ensure_playwright_installed()
-
     config = Config()
     notification = NotificationHandler(config)
     logger = Logger(config, notification, "news_trade_server")
