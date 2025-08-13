@@ -52,6 +52,7 @@ python3 -m crypto_trading_news
 In this project, I use [Heroku](https://www.heroku.com/) as cloud platform for deployment. Here is the config 
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
     - heroku/python
+    - https://github.com/jontewks/puppeteer-heroku-buildpack.git
 - Region: **Europe** (**Note: Avoid choose USA because lack of support API from binance.us**)
 - Add-ons: **[Fixie](https://elements.heroku.com/addons/fixie)** for forward-proxy to binance APIs.
 
