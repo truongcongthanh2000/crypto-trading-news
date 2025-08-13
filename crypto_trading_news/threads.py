@@ -49,6 +49,9 @@ class Threads:
     async def setup_browser(self):
         self.browser: Browser = await launch(defaultViewport={"width": 1920, "height": 1080}, args=['--no-sandbox', '--headless', '--disable-gpu'])
 
+    async def close_browser(self):
+        await self.browser.close()
+
     def log_resources(self, note=""):
         mem_mb = self.process.memory_info().rss / (1024 * 1024)
         cpu_percent = self.process.cpu_percent(interval=None)

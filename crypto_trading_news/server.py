@@ -54,6 +54,7 @@ async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twi
             asyncio.Event().wait(),  # Keeps the loop alive unless interrupted
         )
 
+        await threads.close_browser()
         await application.updater.stop()
         await application.stop()
     scheduler.shutdown()
