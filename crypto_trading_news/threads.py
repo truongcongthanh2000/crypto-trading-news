@@ -115,8 +115,8 @@ class Threads:
 
 
 
-    async def scrape_profile(self, username: str) -> dict:
-        """Scrape Threads profile and their recent posts from a given URL"""
+    async def scrape_thread(self, url: str) -> dict:
+        """Scrape Threads their recent posts and there profile if exists from a given URL"""
         parsed = {
             "user": {},
             "threads": [],
@@ -124,7 +124,6 @@ class Threads:
         try:
             # page = await browser.new_page()
             page = await self.browser.newPage()
-            url = f'{self.BASE_URL}/@{username}'
 
             await page.goto(url)
             # wait for page to finish loading
@@ -159,7 +158,7 @@ class Threads:
             return parsed
         except Exception as err:
             self.logger.error(Message(
-                title=f"Error Threads.scrape_profile - username={username}",
+                title=f"Error Threads.scrape_thread - url={url}",
                 body=f"Error: {err=}", 
                 format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
@@ -167,7 +166,8 @@ class Threads:
             return parsed
 
     async def retrieve_user_posts(self, username: str) -> list[Message]:
-        response = await self.scrape_profile(username)
+        url = f'{self.BASE_URL}/@{username}'
+        response = await self.scrape_thread(url)
         time_now = int(time.time())
         max_timestamp = 0
         for thread in response['threads']:
@@ -207,50 +207,3 @@ class Threads:
         for username in list_username:
             await self.retrieve_user_posts(username)
         self.log_resources("After scraping all users")
-
-    # async def scrape_thread(self, url: str) -> dict:
-    #     """Scrape Threads post and replies from a given URL"""
-    #     try:
-    #         async with async_playwright() as pw:
-    #             # start Playwright browser
-    #             browser = await pw.chromium.launch()
-    #             context = await browser.new_context(viewport={"width": 1920, "height": 1080})
-    #             page = await context.new_page()
-
-    #             # go to url and wait for the page to load
-    #             await page.goto(url)
-    #             # wait for page to finish loading
-    #             await page.wait_for_selector("[data-pressable-container=true]", timeout=3000)
-    #             # find all hidden datasets
-    #             selector = Selector(await page.content())
-    #             hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
-    #             # find datasets that contain threads data
-    #             for hidden_dataset in hidden_datasets:
-    #                 # skip loading datasets that clearly don't contain threads data
-    #                 if '"ScheduledServerJS"' not in hidden_dataset:
-    #                     continue
-    #                 if "thread_items" not in hidden_dataset:
-    #                     continue
-    #                 data = json.loads(hidden_dataset)
-    #                 # datasets are heavily nested, use nested_lookup to find 
-    #                 # the thread_items key for thread data
-    #                 thread_items = nested_lookup("thread_items", data)
-    #                 if not thread_items:
-    #                     continue
-    #                 # use our jmespath parser to reduce the dataset to the most important fields
-    #                 threads = [self.parse_thread(t) for thread in thread_items for t in thread]
-    #                 return {
-    #                     # the first parsed thread is the main post:
-    #                     "thread": threads[0],
-    #                     # other threads are replies:
-    #                     "replies": threads[1:],
-    #                 }
-    #         raise ValueError("could not find thread data in page")
-    #     except Exception as err:
-    #         self.logger.error(Message(
-    #             title=f"Error Threads.scrape_thread - url={url}",
-    #             body=f"Error: {err=}", 
-    #             format=None,
-    #             chat_id=self.config.TELEGRAM_LOG_PEER_ID
-    #         ), True)
-    #         return {}

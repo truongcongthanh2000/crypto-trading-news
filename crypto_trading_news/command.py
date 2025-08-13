@@ -520,10 +520,10 @@ class Command:
     async def f_get_replies(self, message_id: str) -> list[Message]:
         threads_reply = self.map_tracking_replies[message_id]
         response = await self.threads.scrape_thread(threads_reply.url)
-        if "thread" not in response:
+        if "threads" not in response:
             return
-        thread = response["thread"]
-        replies = response["replies"]
+        thread = response["threads"][0]
+        replies = response["threads"][1:]
         replies.sort(key = lambda reply: reply["published_on"])
         max_timestamp = threads_reply.max_timestamp
         for reply in replies:
