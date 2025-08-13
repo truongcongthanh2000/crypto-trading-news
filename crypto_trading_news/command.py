@@ -514,12 +514,8 @@ class Command:
             remove_job_if_exists(JOB_NAME_FREPLIES_TRACK, context)
             await context.bot.send_message(chat_id, text=telegramify_markdown.markdownify("👋 You don't have any replies for tracking at this time!\nJob was removed, please command `/freplies_track` interval(seconds) when create a new reply."), parse_mode=ParseMode.MARKDOWN_V2)
             return
-        replies = []
         for message_id in self.map_tracking_replies:
-            replies.extend(await self.f_get_replies(message_id))
-        for message in replies:
-            self.logger.info(message, True)
-        await asyncio.sleep(1)
+            await self.f_get_replies(message_id)
 
     async def f_get_replies(self, message_id: str) -> list[Message]:
         threads_reply = self.map_tracking_replies[message_id]
@@ -530,23 +526,22 @@ class Command:
         replies = response["replies"]
         replies.sort(key = lambda reply: reply["published_on"])
         max_timestamp = threads_reply.max_timestamp
-        list_replies = []
         for reply in replies:
             if reply["published_on"] <= threads_reply.max_timestamp:
                 continue
             title = f"{reply['username']} - Time: {datetime.fromtimestamp(reply['published_on'], tz=pytz.timezone('Asia/Ho_Chi_Minh'))}"
             if reply["username"] == thread["username"]:
                 title += f" - {self.config.TELEGRAM_ME}"
-            list_replies.append(Message(
+            message = Message(
                 body=f"{reply['text']}\n[Link: {reply['url']}]({reply['url']})",
                 title=title,
                 image=reply["images"],
                 chat_id=self.config.TELEGRAM_GROUP_CHAT_ID,
                 group_message_id=int(message_id)
-            ))
+            )
+            self.logger.info(message, True)
             max_timestamp = reply["published_on"]
         threads_reply.max_timestamp = max_timestamp
-        return list_replies
 
     # Format remove: coin:all/index0,index1,...
     def f_alert_remove(self, input: str):
