@@ -539,7 +539,7 @@ class Command:
                 chat_id=self.config.TELEGRAM_GROUP_CHAT_ID,
                 group_message_id=int(message_id)
             )
-            self.logger.info(message, True)
+            self.logger.info(message, notification=True)
             max_timestamp = reply["published_on"]
         threads_reply.max_timestamp = max_timestamp
 
