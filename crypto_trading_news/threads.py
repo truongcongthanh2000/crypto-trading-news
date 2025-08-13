@@ -15,6 +15,7 @@ import os
 import psutil
 from pyppeteer import launch
 from pyppeteer.browser import Browser
+import asyncio
 
 def remove_redundant_spaces(text: str):
     lines = text.split('\n')
@@ -139,24 +140,31 @@ class Threads:
                     el => el.textContent
                 );
             }''')
-            for hidden_dataset in hidden_datasets:
-                # skip loading datasets that clearly don't contain threads data
-                if '"ScheduledServerJS"' not in hidden_dataset:
-                    continue
-                is_profile = 'follower_count' in hidden_dataset
-                is_threads = 'thread_items' in hidden_dataset
-                if not is_profile and not is_threads:
-                    continue
-                data = json.loads(hidden_dataset)
-                if is_profile:
-                    user_data = nested_lookup('user', data)
-                    parsed['user'] = self.parse_profile(user_data[0])
-                if is_threads:
-                    thread_items = nested_lookup('thread_items', data)
-                    threads = [
+            hidden_datasets = await page.evaluate('''() => {
+                const scripts = document.querySelectorAll('script[type="application/json"][data-sjs]');
+                const parsed = [];
+                for (const el of scripts) {
+                    const txt = el.textContent;
+                    if (!txt.includes('"ScheduledServerJS"')) continue;
+                    const isProfile = txt.includes('follower_count');
+                    const isThreads = txt.includes('thread_items');
+                    if (!isProfile && !isThreads) continue;
+                    try {
+                        parsed.push({ data: JSON.parse(txt), isProfile, isThreads });
+                    } catch {}
+                }
+                return parsed;
+            }''')
+            for item in hidden_datasets:
+                if item['isProfile']:
+                    user_data = nested_lookup('user', item['data'])
+                    if user_data:
+                        parsed['user'] = self.parse_profile(user_data[0])
+                if item['isThreads']:
+                    thread_items = nested_lookup('thread_items', item['data'])
+                    parsed['threads'].extend(
                         self.parse_thread(t) for thread in thread_items for t in thread
-                    ]
-                    parsed['threads'].extend(threads)
+                    )
             await page.close()
             return parsed
         except Exception as err:
@@ -207,6 +215,5 @@ class Threads:
         list_username = self.config.THREADS_LIST_USERNAME
         # self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
         self.log_resources("Before scraping")
-        for username in list_username:
-            await self.retrieve_user_posts(username)
+        await asyncio.gather(*(self.retrieve_user_posts(u) for u in list_username))
         self.log_resources("After scraping all users")
