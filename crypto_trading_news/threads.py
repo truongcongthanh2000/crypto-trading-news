@@ -125,7 +125,7 @@ class Threads:
 
             await page.goto(url)
             # wait for page to finish loading
-            await page.wait_for_selector("[data-pressable-container=true]")
+            await page.wait_for_selector("[data-pressable-container=true]", timeout=3000)
             
             # Directly grab all JSON blobs without parsing the whole DOM
             hidden_datasets = await page.eval_on_selector_all(
@@ -228,7 +228,7 @@ class Threads:
                 # go to url and wait for the page to load
                 await page.goto(url)
                 # wait for page to finish loading
-                await page.wait_for_selector("[data-pressable-container=true]")
+                await page.wait_for_selector("[data-pressable-container=true]", timeout=3000)
                 # find all hidden datasets
                 selector = Selector(await page.content())
                 hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
