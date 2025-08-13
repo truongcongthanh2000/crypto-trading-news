@@ -129,9 +129,9 @@ class Threads:
             # page = await browser.new_page()
             page = await self.browser.newPage()
 
-            await page.goto(url, timeout=3000)
+            await page.goto(url, timeout=10000)
             # wait for page to finish loading
-            await page.waitForSelector("[data-pressable-container=true]", timeout=3000)
+            await page.waitForSelector("[data-pressable-container=true]", timeout=5000)
             
             # Extract all JSON blobs directly in the browser
             hidden_datasets = await page.evaluate('''() => {
