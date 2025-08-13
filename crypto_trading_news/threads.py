@@ -3,8 +3,6 @@ import time
 from typing import Dict
 
 import jmespath
-from playwright.async_api import async_playwright
-from playwright.async_api import BrowserContext
 from nested_lookup import nested_lookup
 from .logger import Logger
 from .config import Config
@@ -15,7 +13,8 @@ import re
 from .util import is_command_trade
 import os
 import psutil
-from parsel import Selector
+from pyppeteer import launch
+from pyppeteer.browser import Browser
 
 def remove_redundant_spaces(text: str):
     lines = text.split('\n')
@@ -46,6 +45,9 @@ class Threads:
         self.logger = logger
         self.map_last_timestamp = {}
         self.process = psutil.Process(os.getpid())
+
+    async def setup_browser(self):
+        self.browser: Browser = await launch(defaultViewport={"width": 1920, "height": 1080})
 
     def log_resources(self, note=""):
         mem_mb = self.process.memory_info().rss / (1024 * 1024)
@@ -113,25 +115,28 @@ class Threads:
 
 
 
-    async def scrape_profile(self, username: str, context: BrowserContext) -> dict:
+    async def scrape_profile(self, username: str) -> dict:
         """Scrape Threads profile and their recent posts from a given URL"""
         parsed = {
             "user": {},
             "threads": [],
         }
         try:
-            page = await context.new_page()
+            # page = await browser.new_page()
+            page = await self.browser.newPage()
             url = f'{self.BASE_URL}/@{username}'
 
             await page.goto(url)
             # wait for page to finish loading
-            await page.wait_for_selector("[data-pressable-container=true]", timeout=3000)
+            await page.waitForSelector("[data-pressable-container=true]", timeout=3000)
             
-            # Directly grab all JSON blobs without parsing the whole DOM
-            hidden_datasets = await page.eval_on_selector_all(
-                'script[type="application/json"][data-sjs]',
-                'els => els.map(e => e.textContent)'
-            )
+            # Extract all JSON blobs directly in the browser
+            hidden_datasets = await page.evaluate('''() => {
+                return Array.from(
+                    document.querySelectorAll('script[type="application/json"][data-sjs]'),
+                    el => el.textContent
+                );
+            }''')
             for hidden_dataset in hidden_datasets:
                 # skip loading datasets that clearly don't contain threads data
                 if '"ScheduledServerJS"' not in hidden_dataset:
@@ -161,8 +166,8 @@ class Threads:
             ), notification=True)
             return parsed
 
-    async def retrieve_user_posts(self, username: str, context: BrowserContext) -> list[Message]:
-        response = await self.scrape_profile(username, context)
+    async def retrieve_user_posts(self, username: str) -> list[Message]:
+        response = await self.scrape_profile(username)
         time_now = int(time.time())
         max_timestamp = 0
         for thread in response['threads']:
@@ -198,67 +203,54 @@ class Threads:
             return
         list_username = self.config.THREADS_LIST_USERNAME
         # self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
-        # start Playwright browser
-        self.log_resources("Before Playwright start")
-        async with async_playwright() as pw:
-            # start Playwright browser
-            browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
-            context = await browser.new_context(viewport={"width": 1920, "height": 1080})
-            self.log_resources("After browser start")
-            # Prepare all tasks concurrently
-            for username in list_username:
-                await self.retrieve_user_posts(username, context)
-            
-            self.log_resources("After scraping all users")
+        self.log_resources("Before scraping")
+        for username in list_username:
+            await self.retrieve_user_posts(username)
+        self.log_resources("After scraping all users")
 
-            await context.close()
-            await browser.close()
+    # async def scrape_thread(self, url: str) -> dict:
+    #     """Scrape Threads post and replies from a given URL"""
+    #     try:
+    #         async with async_playwright() as pw:
+    #             # start Playwright browser
+    #             browser = await pw.chromium.launch()
+    #             context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+    #             page = await context.new_page()
 
-            self.log_resources("After browser close")
-
-    async def scrape_thread(self, url: str) -> dict:
-        """Scrape Threads post and replies from a given URL"""
-        try:
-            async with async_playwright() as pw:
-                # start Playwright browser
-                browser = await pw.chromium.launch()
-                context = await browser.new_context(viewport={"width": 1920, "height": 1080})
-                page = await context.new_page()
-
-                # go to url and wait for the page to load
-                await page.goto(url)
-                # wait for page to finish loading
-                await page.wait_for_selector("[data-pressable-container=true]", timeout=3000)
-                # find all hidden datasets
-                selector = Selector(await page.content())
-                hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
-                # find datasets that contain threads data
-                for hidden_dataset in hidden_datasets:
-                    # skip loading datasets that clearly don't contain threads data
-                    if '"ScheduledServerJS"' not in hidden_dataset:
-                        continue
-                    if "thread_items" not in hidden_dataset:
-                        continue
-                    data = json.loads(hidden_dataset)
-                    # datasets are heavily nested, use nested_lookup to find 
-                    # the thread_items key for thread data
-                    thread_items = nested_lookup("thread_items", data)
-                    if not thread_items:
-                        continue
-                    # use our jmespath parser to reduce the dataset to the most important fields
-                    threads = [self.parse_thread(t) for thread in thread_items for t in thread]
-                    return {
-                        # the first parsed thread is the main post:
-                        "thread": threads[0],
-                        # other threads are replies:
-                        "replies": threads[1:],
-                    }
-            raise ValueError("could not find thread data in page")
-        except Exception as err:
-            self.logger.error(Message(
-                title=f"Error Threads.scrape_thread - url={url}",
-                body=f"Error: {err=}", 
-                format=None,
-                chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
-            return {}
+    #             # go to url and wait for the page to load
+    #             await page.goto(url)
+    #             # wait for page to finish loading
+    #             await page.wait_for_selector("[data-pressable-container=true]", timeout=3000)
+    #             # find all hidden datasets
+    #             selector = Selector(await page.content())
+    #             hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
+    #             # find datasets that contain threads data
+    #             for hidden_dataset in hidden_datasets:
+    #                 # skip loading datasets that clearly don't contain threads data
+    #                 if '"ScheduledServerJS"' not in hidden_dataset:
+    #                     continue
+    #                 if "thread_items" not in hidden_dataset:
+    #                     continue
+    #                 data = json.loads(hidden_dataset)
+    #                 # datasets are heavily nested, use nested_lookup to find 
+    #                 # the thread_items key for thread data
+    #                 thread_items = nested_lookup("thread_items", data)
+    #                 if not thread_items:
+    #                     continue
+    #                 # use our jmespath parser to reduce the dataset to the most important fields
+    #                 threads = [self.parse_thread(t) for thread in thread_items for t in thread]
+    #                 return {
+    #                     # the first parsed thread is the main post:
+    #                     "thread": threads[0],
+    #                     # other threads are replies:
+    #                     "replies": threads[1:],
+    #                 }
+    #         raise ValueError("could not find thread data in page")
+    #     except Exception as err:
+    #         self.logger.error(Message(
+    #             title=f"Error Threads.scrape_thread - url={url}",
+    #             body=f"Error: {err=}", 
+    #             format=None,
+    #             chat_id=self.config.TELEGRAM_LOG_PEER_ID
+    #         ), True)
+    #         return {}
