@@ -129,17 +129,11 @@ class Threads:
             # page = await browser.new_page()
             page = await self.browser.newPage()
 
-            await page.goto(url)
+            await page.goto(url, timeout=3000)
             # wait for page to finish loading
             await page.waitForSelector("[data-pressable-container=true]", timeout=3000)
             
             # Extract all JSON blobs directly in the browser
-            hidden_datasets = await page.evaluate('''() => {
-                return Array.from(
-                    document.querySelectorAll('script[type="application/json"][data-sjs]'),
-                    el => el.textContent
-                );
-            }''')
             hidden_datasets = await page.evaluate('''() => {
                 const scripts = document.querySelectorAll('script[type="application/json"][data-sjs]');
                 const parsed = [];
