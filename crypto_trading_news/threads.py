@@ -11,12 +11,11 @@ from .config import Config
 from .notification import Message
 from datetime import datetime
 import pytz
-import sys
 import re
 from .util import is_command_trade
-import asyncio
 import os
 import psutil
+from parsel import Selector
 
 def remove_redundant_spaces(text: str):
     lines = text.split('\n')
@@ -216,3 +215,50 @@ class Threads:
             await browser.close()
 
             self.log_resources("After browser close")
+
+    async def scrape_thread(self, url: str) -> dict:
+        """Scrape Threads post and replies from a given URL"""
+        try:
+            async with async_playwright() as pw:
+                # start Playwright browser
+                browser = await pw.chromium.launch()
+                context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+                page = await context.new_page()
+
+                # go to url and wait for the page to load
+                await page.goto(url)
+                # wait for page to finish loading
+                await page.wait_for_selector("[data-pressable-container=true]")
+                # find all hidden datasets
+                selector = Selector(await page.content())
+                hidden_datasets = selector.css('script[type="application/json"][data-sjs]::text').getall()
+                # find datasets that contain threads data
+                for hidden_dataset in hidden_datasets:
+                    # skip loading datasets that clearly don't contain threads data
+                    if '"ScheduledServerJS"' not in hidden_dataset:
+                        continue
+                    if "thread_items" not in hidden_dataset:
+                        continue
+                    data = json.loads(hidden_dataset)
+                    # datasets are heavily nested, use nested_lookup to find 
+                    # the thread_items key for thread data
+                    thread_items = nested_lookup("thread_items", data)
+                    if not thread_items:
+                        continue
+                    # use our jmespath parser to reduce the dataset to the most important fields
+                    threads = [self.parse_thread(t) for thread in thread_items for t in thread]
+                    return {
+                        # the first parsed thread is the main post:
+                        "thread": threads[0],
+                        # other threads are replies:
+                        "replies": threads[1:],
+                    }
+            raise ValueError("could not find thread data in page")
+        except Exception as err:
+            self.logger.error(Message(
+                title=f"Error Threads.scrape_thread - url={url}",
+                body=f"Error: {err=}", 
+                format=None,
+                chat_id=self.config.TELEGRAM_LOG_PEER_ID
+            ), True)
+            return {}
