@@ -12,7 +12,6 @@ import pytz
 import re
 from .util import is_command_trade
 import os
-import psutil
 from pyppeteer import launch
 from pyppeteer.browser import Browser
 import asyncio
@@ -45,26 +44,12 @@ class Threads:
         self.config = config
         self.logger = logger
         self.map_last_timestamp = {}
-        self.process = psutil.Process(os.getpid())
 
     async def setup_browser(self):
         self.browser: Browser = await launch(defaultViewport={"width": 1920, "height": 1080}, args=['--no-sandbox', '--headless', '--disable-gpu'])
 
     async def close_browser(self):
         await self.browser.close()
-
-    def log_resources(self, note=""):
-        mem_mb = self.process.memory_info().rss / (1024 * 1024)
-        cpu_percent = self.process.cpu_percent(interval=None)
-        net_io = self.process.net_io_counters() if hasattr(self.process, "net_io_counters") else None
-
-        net_info = ""
-        if net_io:
-            net_info = f", Net: sent={net_io.bytes_sent/1024:.1f} KB, recv={net_io.bytes_recv/1024:.1f} KB"
-
-        self.logger.info(
-            f"[Resources] {note} - CPU: {cpu_percent:.1f}% | RAM: {mem_mb:.2f} MB{net_info}"
-        )
 
     # Note: we'll also be using parse_thread function we wrote earlier:
 
@@ -208,6 +193,4 @@ class Threads:
             return
         list_username = self.config.THREADS_LIST_USERNAME
         # self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
-        self.log_resources("Before scraping")
         await asyncio.gather(*(self.retrieve_user_posts(u) for u in list_username))
-        self.log_resources("After scraping all users")
