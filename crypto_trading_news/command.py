@@ -90,7 +90,7 @@ class Command:
                 title=f"Error post_init",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg = "/start - Get public, local IP of the server\n"
@@ -118,7 +118,7 @@ class Command:
                 title=f"Error Command.help - {update}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
     
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handles command /start from the admin"""
@@ -130,7 +130,7 @@ class Command:
                 title=f"Error Command.start - {update}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
     
     async def info(self, update: Update, context: ContextTypes.DEFAULT_TYPE): # info current spot/future account, ex: balance, pnl, orders, ...
         try:
@@ -142,7 +142,7 @@ class Command:
                 title=f"Error Command.faccount - {update}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     async def info_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE): # info current spot/future account, ex: balance, pnl, orders, ...
         try:
@@ -176,7 +176,7 @@ class Command:
                 title=f"Error Command.info_message - {update}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
     
     # forder buy/sell coin leverage margin sl(optional) tp(optional)
     async def forder(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -199,7 +199,7 @@ class Command:
                         title=f"Error Command.forder - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
                         body=f"Error: {responses[idx]['msg']}",
                         chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                    ), True)
+                    ), notification=True)
                     ok = False
             if ok:
                 await update.message.reply_text(text=f"👋 Your order for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}")
@@ -208,7 +208,7 @@ class Command:
                 title=f"Error Command.forder - {side} - {symbol} - {leverage} - {margin}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     # flimit buy/sell coin leverage margin price
     async def flimit(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -230,7 +230,7 @@ class Command:
                     title=f"Error Command.flimit - {order['side']} - {order['type']} - {symbol}",
                     body=f"Error: {responses['msg']}",
                     chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                ), True)
+                ), notification=True)
             else:
                 await update.message.reply_text(text=f"👋 Your limit order for {symbol} is successful\n {json.dumps(order, indent=2)}")
         except Exception as err:
@@ -238,7 +238,7 @@ class Command:
                 title=f"Error Command.flimit - {side} - {symbol} - {leverage} - margin: ${margin} - price: ${price}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
     
     # fclose coin
     async def fclose(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -260,7 +260,7 @@ class Command:
                             title=f"Error Command.forder - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
                             body=f"Error: {responses[idx]['msg']}",
                             chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                        ), True)
+                        ), notification=True)
                         ok = False
                 if ok:
                     for idx in range(len(batch_orders)):
@@ -282,7 +282,7 @@ class Command:
                 title=f"Error Command.fclose - {symbol}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     # fch coin interval(optional, default=15m) range(optional, default=21 * interval)
     async def fchart(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -301,7 +301,7 @@ class Command:
                 title=f"Error Command.fchart - {symbol}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     # fp coin1 coin2 ....
     async def fprices(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -319,7 +319,7 @@ class Command:
                 title=f"Error Command.fprice - {symbol}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     # fstats interval(seconds)
     async def fstats(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -332,7 +332,7 @@ class Command:
                 title=f"Error Command.fstats - {interval}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
     
     # ftpsl coin sl(optional) tp(optional)
     async def ftpsl(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -351,7 +351,7 @@ class Command:
                             title=f"Error Command.ftpsl - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
                             body=f"Error: {responses[idx]['msg']}",
                             chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                        ), True)
+                        ), notification=True)
                         ok = False
                 if ok:
                     await update.message.reply_text(text=f"👋 Your tp/sl order for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}")
@@ -362,7 +362,7 @@ class Command:
                 title=f"Error Command.ftpsl - {symbol}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     # falert op1:coin1:price1_1,price1_2,...(:gap1, default=0.5%) op2:coin2:price2_1,price2_2,...(:gap2, default=0.5%)...
     async def falert(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -376,7 +376,7 @@ class Command:
                 title=f"Error Command.falert - {' '.join(context.args)}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     # add alert into map, format = op:coin:price1,price2,...(:gap, default=0.5%)
     def f_alert(self, input: str):
@@ -405,7 +405,7 @@ class Command:
                 title=f"Error Command.falert_track - {interval}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
     
     # falert_list
     async def falert_list(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -425,7 +425,7 @@ class Command:
                 title=f"Error Command.falert_list",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
     
     # falert_remove all; coin1:all/index0,index1,... coin2:all/index0,index1,...
     async def falert_remove(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -443,7 +443,7 @@ class Command:
                 title=f"Error Command.falert_remove - {' '.join(context.args)}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
     
     # freplies url message_id
     async def freplies(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -457,7 +457,7 @@ class Command:
                 title=f"Error Command.freplies - {' '.join(context.args)}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     # freplies_track interval(seconds)
     async def freplies_track(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -470,7 +470,7 @@ class Command:
                 title=f"Error Command.freplies_track - {interval}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     # freplies_list
     async def freplies_list(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -487,7 +487,7 @@ class Command:
                 title=f"Error Command.freplies_list",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     async def freplies_remove(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
@@ -506,7 +506,7 @@ class Command:
                 title=f"Error Command.freplies_remove - {' '.join(context.args)}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     async def f_get_replies_track(self, context: ContextTypes.DEFAULT_TYPE):
         chat_id = self.config.TELEGRAM_LOG_PEER_ID
@@ -520,7 +520,7 @@ class Command:
     async def f_get_replies(self, message_id: str) -> list[Message]:
         threads_reply = self.map_tracking_replies[message_id]
         response = await self.threads.scrape_thread(threads_reply.url)
-        if "threads" not in response:
+        if "threads" not in response or len(response["threads"]) == 0:
             return
         thread = response["threads"][0]
         replies = response["threads"][1:]
@@ -624,7 +624,7 @@ class Command:
                 title=f"Error Command.Update {update}",
                 body=f"Error Msg: {context.error}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), True)
+            ), notification=True)
 
     def info_spot(self):
         account_info = self.binance_api.get_account()
