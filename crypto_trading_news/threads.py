@@ -46,7 +46,7 @@ class Threads:
         self.map_last_timestamp = {}
 
     async def setup_browser(self):
-        self.browser: Browser = await launch(defaultViewport={"width": 1920, "height": 1080}, args=['--no-sandbox', '--headless', '--disable-gpu'])
+        self.browser: Browser = await launch(defaultViewport={"width": 1280, "height": 720}, args=['--no-sandbox', '--headless', '--disable-gpu'])
 
     async def close_browser(self):
         await self.browser.close()
@@ -114,7 +114,7 @@ class Threads:
             # page = await browser.new_page()
             page = await self.browser.newPage()
 
-            await page.goto(url, timeout=10000)
+            await page.goto(url, waitUntil="domcontentloaded", timeout=10000)
             # wait for page to finish loading
             await page.waitForSelector("[data-pressable-container=true]", timeout=5000)
             
