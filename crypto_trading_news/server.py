@@ -1,4 +1,3 @@
-import time
 from .logger import Logger
 from .twitter import Twitter
 from .config import Config
