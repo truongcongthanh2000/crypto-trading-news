@@ -196,4 +196,6 @@ class Threads:
             return
         list_username = self.config.THREADS_LIST_USERNAME
         # self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
-        await asyncio.gather(*(self.retrieve_user_posts(u) for u in list_username))
+        for u in list_username:
+            await self.retrieve_user_posts(u)
+        # await asyncio.gather(*(self.retrieve_user_posts(u) for u in list_username))
