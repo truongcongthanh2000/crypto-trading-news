@@ -12,8 +12,7 @@ import pytz
 import re
 from .util import is_command_trade
 import os
-from pyppeteer import launch
-from pyppeteer.browser import Browser
+from playwright.async_api import async_playwright
 import asyncio
 
 def remove_redundant_spaces(text: str):
@@ -39,14 +38,11 @@ class Threads:
     """
     A basic interface for interacting with Threads.
     """
-    BASE_URL = "https://www.threads.net"
+    BASE_URL = "https://threads.com"
     def __init__(self, config: Config, logger: Logger):
         self.config = config
         self.logger = logger
         self.map_last_timestamp = {}
-
-    async def setup_browser(self):
-        self.browser: Browser = await launch(defaultViewport={"width": 1280, "height": 720}, args=['--no-sandbox', '--headless', '--disable-gpu'])
 
     async def close_browser(self):
         await self.browser.close()
@@ -111,40 +107,43 @@ class Threads:
             "threads": [],
         }
         page = None
+        browser = None
         try:
-            # page = await browser.new_page()
-            page = await self.browser.newPage()
+            async with async_playwright() as pw:
+                # start Playwright browser
+                browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
+                page = await browser.new_page(viewport={"width": 1920, "height": 1080})
 
-            await page.goto(url, waitUntil="domcontentloaded", timeout=10000)
-            # wait for page to finish loading
-            await page.waitForSelector("[data-pressable-container=true]", timeout=5000)
-            
-            # Extract all JSON blobs directly in the browser
-            hidden_datasets = await page.evaluate('''() => {
-                const scripts = document.querySelectorAll('script[type="application/json"][data-sjs]');
-                const parsed = [];
-                for (const el of scripts) {
-                    const txt = el.textContent;
-                    if (!txt.includes('"ScheduledServerJS"')) continue;
-                    const isProfile = txt.includes('follower_count');
-                    const isThreads = txt.includes('thread_items');
-                    if (!isProfile && !isThreads) continue;
-                    try {
-                        parsed.push({ data: JSON.parse(txt), isProfile, isThreads });
-                    } catch {}
-                }
-                return parsed;
-            }''')
-            for item in hidden_datasets:
-                if item['isProfile']:
-                    user_data = nested_lookup('user', item['data'])
-                    if user_data:
-                        parsed['user'] = self.parse_profile(user_data[0])
-                if item['isThreads']:
-                    thread_items = nested_lookup('thread_items', item['data'])
-                    parsed['threads'].extend(
-                        self.parse_thread(t) for thread in thread_items for t in thread
-                    )
+                await page.goto(url, wait_until="domcontentloaded", timeout=10000)
+                # wait for page to finish loading
+                await page.wait_for_selector("[data-pressable-container=true]", timeout=5000)
+                
+                # Extract all JSON blobs directly in the browser
+                hidden_datasets = await page.evaluate('''() => {
+                    const scripts = document.querySelectorAll('script[type="application/json"][data-sjs]');
+                    const parsed = [];
+                    for (const el of scripts) {
+                        const txt = el.textContent;
+                        if (!txt.includes('"ScheduledServerJS"')) continue;
+                        const isProfile = txt.includes('follower_count');
+                        const isThreads = txt.includes('thread_items');
+                        if (!isProfile && !isThreads) continue;
+                        try {
+                            parsed.push({ data: JSON.parse(txt), isProfile, isThreads });
+                        } catch {}
+                    }
+                    return parsed;
+                }''')
+                for item in hidden_datasets:
+                    if item['isProfile']:
+                        user_data = nested_lookup('user', item['data'])
+                        if user_data:
+                            parsed['user'] = self.parse_profile(user_data[0])
+                    if item['isThreads']:
+                        thread_items = nested_lookup('thread_items', item['data'])
+                        parsed['threads'].extend(
+                            self.parse_thread(t) for thread in thread_items for t in thread
+                        )
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Threads.scrape_thread - url={url}",
@@ -155,6 +154,8 @@ class Threads:
         finally:
             if page:
                 await page.close()
+            if browser:
+                await browser.close()
         return parsed
 
     async def retrieve_user_posts(self, username: str) -> list[Message]:

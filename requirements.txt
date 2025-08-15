@@ -16,4 +16,4 @@ mistletoe==1.4.0
 pandas==2.2.3
 matplotlib==3.10.3
 mplfinance==0.12.10b0
-pyppeteer==2.0.0
+pytest-playwright==0.7.0
