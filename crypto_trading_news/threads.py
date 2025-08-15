@@ -110,6 +110,7 @@ class Threads:
             "user": {},
             "threads": [],
         }
+        page = None
         try:
             # page = await browser.new_page()
             page = await self.browser.newPage()
@@ -144,8 +145,6 @@ class Threads:
                     parsed['threads'].extend(
                         self.parse_thread(t) for thread in thread_items for t in thread
                     )
-            await page.close()
-            return parsed
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Threads.scrape_thread - url={url}",
@@ -153,7 +152,10 @@ class Threads:
                 format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
-            return parsed
+        finally:
+            if page:
+                await page.close()
+        return parsed
 
     async def retrieve_user_posts(self, username: str) -> list[Message]:
         url = f'{self.BASE_URL}/@{username}'
