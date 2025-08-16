@@ -36,7 +36,7 @@ class Twitter:
             else:
                 update_max_timestamp[user_id] = tweet_timestamp
             twitter_tweets.append(Message(
-                title= f"Twitter - {user_name} - Time: {datetime.fromtimestamp(tweet_timestamp, tz=self.config.TIMEZONE)}",
+                title= f"Twitter - {user_name} - Time: {datetime.fromtimestamp(tweet_timestamp, tz=pytz.timezone(self.config.TIMEZONE))}",
                 body= f"{tweet.full_text}\n\n[Link: {url}]({url})",
                 chat_id=self.config.TELEGRAM_TRADE_PEER_ID
             ))

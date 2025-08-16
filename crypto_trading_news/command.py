@@ -79,7 +79,7 @@ class Command:
         try:
             commands = await application.bot.get_my_commands()
             public_ip = requests.get('https://api.ipify.org', proxies=self.config.PROXIES).text
-            msg = f"👋 **Start News - Command Trade - Time: {datetime.fromtimestamp(int(time.time()), tz=self.config.TIMEZONE)}**\n"
+            msg = f"👋 **Start News - Command Trade - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone(self.config.TIMEZONE))}**\n"
             msg += f"**Your server public IP is `{public_ip}`, here is list commands:**\n"
             for command in commands:
                 msg += f"/{command.command} - {command.description}\n"
@@ -479,7 +479,7 @@ class Command:
             msg = ""
             for message_id in self.map_tracking_replies:
                 threads_reply = self.map_tracking_replies[message_id]
-                msg += f"👉 **{message_id}**: **{threads_reply.url}** - Time: {datetime.fromtimestamp(threads_reply.max_timestamp, tz=self.config.TIMEZONE)}\n"
+                msg += f"👉 **{message_id}**: **{threads_reply.url}** - Time: {datetime.fromtimestamp(threads_reply.max_timestamp, tz=pytz.timezone(self.config.TIMEZONE))}\n"
             msg = "🔔 Here is your list replies:\n" + msg
             await context.bot.send_message(chat_id, text=telegramify_markdown.markdownify(msg), parse_mode=ParseMode.MARKDOWN_V2, link_preview_options=LinkPreviewOptions(is_disabled=True))
         except Exception as err:
@@ -529,7 +529,7 @@ class Command:
         for reply in replies:
             if reply["published_on"] <= threads_reply.max_timestamp:
                 continue
-            title = f"{reply['username']} - Time: {datetime.fromtimestamp(reply['published_on'], tz=self.config.TIMEZONE)}"
+            title = f"{reply['username']} - Time: {datetime.fromtimestamp(reply['published_on'], tz=pytz.timezone(self.config.TIMEZONE))}"
             if reply["username"] == thread["username"]:
                 title += f" - {self.config.TELEGRAM_ME}"
             message = Message(
@@ -608,7 +608,7 @@ class Command:
         msg = ""
         if abs(totalROI) >= self.config.TELEGRAM_ROI_SIGNAL: # notify me when signal totalROI >= 10%
             msg += f"{self.config.TELEGRAM_ME} - **${pnl}**\n"
-        msg += f"**{datetime.fromtimestamp(int(time.time()), tz=self.config.TIMEZONE)}** - " + info
+        msg += f"**{datetime.fromtimestamp(int(time.time()), tz=pytz.timezone(self.config.TIMEZONE))}** - " + info
         await context.bot.send_message(chat_id, text=telegramify_markdown.markdownify(msg), parse_mode=ParseMode.MARKDOWN_V2, link_preview_options=LinkPreviewOptions(is_disabled=True))
     
     async def error(self, update: Update, context: ContextTypes.DEFAULT_TYPE):

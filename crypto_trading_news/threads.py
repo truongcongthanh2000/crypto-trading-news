@@ -183,7 +183,7 @@ class Threads:
                 body += f"\n\n`/freplies {url}`"
             message = Message(
                 body = body,
-                title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=self.config.TIMEZONE)}",
+                title = f"Threads - {username} - Time: {datetime.fromtimestamp(thread['published_on'], tz=pytz.timezone(self.config.TIMEZONE))}",
                 image=thread['images'],
                 chat_id=chat_id
             )
