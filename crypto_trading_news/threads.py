@@ -1,4 +1,3 @@
-import json
 import time
 from typing import Dict
 
@@ -11,9 +10,9 @@ from datetime import datetime
 import pytz
 import re
 from .util import is_command_trade
-import os
 from playwright.async_api import async_playwright
 import asyncio
+from random import randint
 
 def remove_redundant_spaces(text: str):
     lines = text.split('\n')
@@ -38,7 +37,7 @@ class Threads:
     """
     A basic interface for interacting with Threads.
     """
-    BASE_URL = "https://threads.com"
+    BASE_URL = "https://www.threads.com"
     def __init__(self, config: Config, logger: Logger):
         self.config = config
         self.logger = logger
@@ -112,7 +111,8 @@ class Threads:
             async with async_playwright() as pw:
                 # start Playwright browser
                 browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
-                page = await browser.new_page(viewport={"width": 1920, "height": 1080})
+                context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+                page = await context.new_page()
 
                 await page.goto(url, wait_until="domcontentloaded", timeout=10000)
                 # wait for page to finish loading
@@ -198,4 +198,5 @@ class Threads:
         # self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
         for u in list_username:
             await self.retrieve_user_posts(u)
+            await asyncio.sleep(randint(2, 5))
         # await asyncio.gather(*(self.retrieve_user_posts(u) for u in list_username))
