@@ -11,3 +11,6 @@ source .venv/bin/activate
 
 echo Install all packages
 pip3 install -r requirements.txt
+
+echo Installing playwright chromium dependencies
+playwright install-deps chromium
