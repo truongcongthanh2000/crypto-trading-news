@@ -66,7 +66,7 @@ class Discord:
     def build_message(self, message, channel_info, guild_info):
         message_timestamp = iso_to_unix(message['timestamp'])
         url = f"https://discord.com/channels/{guild_info['id']}/{channel_info['id']}/{message['id']}"
-        payload = Message(title= f"Discord - {guild_info['name']}-{channel_info['name']} - Time: {datetime.fromtimestamp(message_timestamp, tz=pytz.timezone('Asia/Ho_Chi_Minh'))}", body="", chat_id=self.config.TELEGRAM_NEWS_PEER_ID)
+        payload = Message(title= f"Discord - {guild_info['name']}-{channel_info['name']} - Time: {datetime.fromtimestamp(message_timestamp, tz=pytz.timezone(self.config.TIMEZONE))}", body="", chat_id=self.config.TELEGRAM_NEWS_PEER_ID)
         def capture(message):
             if is_command_trade(message['content']):
                 payload.chat_id = self.config.TELEGRAM_TRADE_PEER_ID

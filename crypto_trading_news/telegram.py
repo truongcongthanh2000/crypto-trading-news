@@ -59,7 +59,7 @@ class Telegram:
                     body = message.message
                     body += f"\n\n**[Link: https://t.me/{channel[1:]}/{message.id}](https://t.me/{channel[1:]}/{message.id})**"
                     self.logger.info(Message(
-                        title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone('Asia/Ho_Chi_Minh'))}",
+                        title= f"Telegram - {channel} - Time: {message.date.astimezone(self.config.TIMEZONE)}",
                         body=body,
                         chat_id=channel_id
                     ), notification=True)

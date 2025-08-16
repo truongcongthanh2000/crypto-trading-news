@@ -3,6 +3,7 @@ import queue
 
 from .notification import NotificationHandler
 from .config import Config
+import datetime
 
 class Logger:
     Logger = None
@@ -18,6 +19,7 @@ class Logger:
         self.Logger.addHandler(queue_handler)
 
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        formatter.converter = lambda *args: datetime.datetime.now(tz=config.TIMEZONE).timetuple()
         # default is "logs/crypto_trading.log"
         fh = logging.FileHandler(f"logs/{logging_service}.log")
         fh.setLevel(logging.DEBUG)

@@ -2,6 +2,7 @@ import yaml
 import os
 import json
 import platform
+import pytz
 class Config:
     def __init__(self):
         config = {
@@ -121,6 +122,7 @@ class Config:
             "http": os.environ.get(os.environ.get("HTTP_FIELD") or "HTTP_FIELD") or config["proxies"]["nscriptiod_http"],
             "https": os.environ.get(os.environ.get("HTTPS_FIELD") or "HTTPS_FIELD") or config["proxies"]["nscriptiod_https"]
         }
+        self.TIMEZONE = pytz.timezone(os.environ.get("TIMEZONE") or "Asia/Ho_Chi_Minh")
     def beautify(self):
         response = vars(self).copy()
         response["platform"] = platform.system()
