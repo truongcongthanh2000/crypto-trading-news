@@ -53,7 +53,7 @@ In this project, I use [Heroku](https://www.heroku.com/) as cloud platform for d
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
     - heroku/python
     - https://github.com/playwright-community/heroku-playwright-buildpack.git
-    - https://github.com/jtschoonhoven/heroku-buildpack-tor.git#v1.0.0
+    - https://github.com/jtschoonhoven/heroku-buildpack-tor.git#v1.0.2
 - Region: **Europe** (**Note: Avoid choose USA because lack of support API from binance.us**)
 - Stack: **heroku-22** (**Note: Do not use latest version heroku-24 because of incompatible with playwright**)
 - Add-ons: **[Fixie](https://elements.heroku.com/addons/fixie)** for forward-proxy to binance APIs.
