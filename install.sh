@@ -1,6 +1,9 @@
 echo Updating the server
 sudo apt-get update
 
+echo Installing tor
+sudo apt install tor -y
+
 echo Installing pip
 sudo apt install python3-pip -y
 

@@ -1,5 +1,6 @@
 from .logger import Logger
 from .config import Config
+from .config import ProxyConfig
 from .notification import Message
 from .util import remove_job_if_exists
 from telegram import Update, LinkPreviewOptions
@@ -78,7 +79,7 @@ class Command:
         ])
         try:
             commands = await application.bot.get_my_commands()
-            public_ip = requests.get('https://api.ipify.org', proxies=self.config.PROXIES).text
+            public_ip = requests.get('https://api.ipify.org', proxies=ProxyConfig(self.config.BINANCE_PROXY_URL).binance_proxies).text
             msg = f"👋 **Start News - Command Trade - Time: {datetime.fromtimestamp(int(time.time()), tz=pytz.timezone(self.config.TIMEZONE))}**\n"
             msg += f"**Your server public IP is `{public_ip}`, here is list commands:**\n"
             for command in commands:
@@ -123,7 +124,7 @@ class Command:
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handles command /start from the admin"""
         try:
-            public_ip = requests.get('https://api.ipify.org', proxies=self.config.PROXIES).text
+            public_ip = requests.get('https://api.ipify.org', proxies=ProxyConfig(self.config.BINANCE_PROXY_URL).binance_proxies).text
             await update.message.reply_markdown(text=f"👋 Hello, your server public IP is `{public_ip}`\nCommand `/fstats` interval(seconds) to schedule get stats for current positions")
         except Exception as err:
             self.logger.error(Message(

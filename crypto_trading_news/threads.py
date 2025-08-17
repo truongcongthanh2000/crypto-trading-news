@@ -111,7 +111,7 @@ class Threads:
             async with async_playwright() as pw:
                 # start Playwright browser
                 browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
-                context = await browser.new_context(viewport={"width": 1920, "height": 1080})
+                context = await browser.new_context(viewport={"width": 1920, "height": 1080}, proxy=self.config.TOR_PROXY.playwright_proxy)
                 page = await context.new_page()
 
                 await page.goto(url, wait_until="domcontentloaded", timeout=10000)

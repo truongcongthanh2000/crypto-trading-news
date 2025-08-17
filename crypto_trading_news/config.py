@@ -2,7 +2,68 @@ import yaml
 import os
 import json
 import platform
-import pytz
+
+from urllib.parse import urlparse
+
+class ProxyConfig:
+    def __init__(self, url: str):
+
+        self.url = url
+        parsed = urlparse(url)
+        self.scheme = parsed.scheme
+        self.host = parsed.hostname
+        self.port = parsed.port
+        self.username = parsed.username
+        self.password = parsed.password
+
+    @property
+    def playwright_proxy(self) -> dict:
+        proxy = {"server": f"{self.scheme}://{self.host}:{self.port}"}
+        if self.username and self.password:
+            proxy["username"] = self.username
+            proxy["password"] = self.password
+        return proxy
+
+    @property
+    def python_telegram_bot_proxy(self) -> str:
+        return self.url
+
+    @property
+    def telethon_proxy(self) -> dict:
+        proxy = {
+            "proxy_type": self.scheme,
+            "addr": self.host,
+            "port": self.port,
+        }
+        if self.username:
+            proxy["username"] = self.username
+        if self.password:
+            proxy["password"] = self.password
+        return proxy
+
+    @property
+    def binance_proxies(self) -> dict:
+        auth = ""
+        if self.username and self.password:
+            auth = f"{self.username}:{self.password}@"
+        url = f"{self.scheme}://{auth}{self.host}:{self.port}"
+        return {"http": url, "https": url}
+
+    def to_dict(self) -> dict:
+        """Return safe dict for logging/JSON"""
+        return {
+            "url": self.url,
+            "scheme": self.scheme,
+            "host": self.host,
+            "port": self.port,
+            "username": "***" if self.username else None,
+            "password": "***" if self.password else None,
+        }
+
+    def __repr__(self):
+        return f"ProxyConfig({self.to_dict()})"
+
+
 class Config:
     def __init__(self):
         config = {
@@ -48,14 +109,12 @@ class Config:
                 "list_channel_id": [],
                 "token": ""
             },
-            "notification": {
-                "sleep_time": 10,
-                "limit": 5
-            },
-            "proxies": {
-                "nscriptiod_http": "",
-                "nscriptiod_https": ""
-            },
+            "binance": {
+                "api_key": "",
+                "api_secret": "",
+                "tld": "com",
+                "proxy_url": ""
+            }
         }
         self.TWITTER_COOKIES_DICT = {}
         if os.path.exists("config/config_remote.yaml"):
@@ -112,19 +171,20 @@ class Config:
         self.DISCORD_LIST_CHANNEL_ID =  [channel.strip() for channel in os.environ.get("DISCORD_LIST_CHANNEL_ID", "").split() if channel.strip()] or config["discord"]["list_channel_id"]
         self.DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN") or config["discord"]["token"]
 
-        self.NOTIFICATION_SLEEP_TIME = int(os.environ.get("NOTIFICATION_SLEEP_TIME") or config["notification"]["sleep_time"])
-        self.NOTIFICATION_LIMIT = int(os.environ.get("NOTIFICATION_LIMIT") or config["notification"]["limit"])
-
         self.BINANCE_API_KEY = os.environ.get("BINANCE_API_KEY") or config["binance"]["api_key"]
         self.BINANCE_API_SECRET = os.environ.get("BINANCE_API_SECRET") or config["binance"]["api_secret"]
         self.BINANCE_TLD = os.environ.get("BINANCE_TLD") or config["binance"]["tld"]
-        self.PROXIES = {
-            "http": os.environ.get(os.environ.get("HTTP_FIELD") or "HTTP_FIELD") or config["proxies"]["nscriptiod_http"],
-            "https": os.environ.get(os.environ.get("HTTPS_FIELD") or "HTTPS_FIELD") or config["proxies"]["nscriptiod_https"]
-        }
+        self.BINANCE_PROXY_URL = os.environ.get("BINANCE_PROXY_URL") or config["binance"]["proxy_url"]
+
         self.TIMEZONE = os.environ.get("TIMEZONE") or "Asia/Ho_Chi_Minh"
+        self.TOR_PROXY = ProxyConfig("socks5://127.0.0.1:9050")
     def beautify(self):
-        response = vars(self).copy()
+        response = {}
+        for k, v in vars(self).items():
+            if isinstance(v, ProxyConfig):
+                response[k] = v.to_dict()   # safe masked dict
+            else:
+                response[k] = v
         response["platform"] = platform.system()
         response["TWITTER_COOKIES_TYPE"] = str(type(response["TWITTER_COOKIES_DICT"]))
         response["TWITTER_COOKIES_DICT"] = "{.....}"

@@ -1,10 +1,10 @@
 from .config import Config
+from .config import ProxyConfig
 from .logger import Logger
 from .util import convert_to_seconds
 import threading
 from contextlib import contextmanager
-from typing import Dict, Set, Tuple
-from .notification import Message
+from typing import Dict
 from binance.client import Client
 import time
 
@@ -26,7 +26,7 @@ class BinanceAPI:
             api_key=config.BINANCE_API_KEY,
             api_secret=config.BINANCE_API_SECRET,
             tld=config.BINANCE_TLD,
-            requests_params={"proxies" : config.PROXIES}
+            requests_params={"proxies" : ProxyConfig(config.BINANCE_PROXY_URL).binance_proxies}
         )
 
     # spot api

@@ -11,7 +11,7 @@ class Telegram:
     def __init__(self, config: Config, logger: Logger):
         self.config = config
         self.logger = logger
-        self.client = TelegramClient(StringSession(config.TELEGRAM_SESSION_STRING), config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH)
+        self.client = TelegramClient(StringSession(config.TELEGRAM_SESSION_STRING), config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH, proxy=config.TOR_PROXY.telethon_proxy)
         self.map_offset_date = {}
 
     async def connect(self):
