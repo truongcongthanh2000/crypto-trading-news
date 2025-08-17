@@ -1,1 +1,1 @@
-bot: python -m crypto_trading_news
+bot: ./tor/bin/run_tor & python -m crypto_trading_news
