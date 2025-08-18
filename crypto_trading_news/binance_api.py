@@ -26,7 +26,7 @@ class BinanceAPI:
             api_key=config.BINANCE_API_KEY,
             api_secret=config.BINANCE_API_SECRET,
             tld=config.BINANCE_TLD,
-            requests_params={"proxies" : ProxyConfig(config.BINANCE_PROXY_URL).binance_proxies}
+            requests_params={"proxies" : ProxyConfig(config.BINANCE_PROXY_URL).binance_proxies} if config.BINANCE_PROXY_URL else None
         )
 
     # spot api

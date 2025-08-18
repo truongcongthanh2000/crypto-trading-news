@@ -6,18 +6,27 @@ import platform
 from urllib.parse import urlparse
 
 class ProxyConfig:
-    def __init__(self, url: str):
+    def __init__(self, url: str | None):
+        self.url = url.strip() if url else None
 
-        self.url = url
-        parsed = urlparse(url)
-        self.scheme = parsed.scheme
-        self.host = parsed.hostname
-        self.port = parsed.port
-        self.username = parsed.username
-        self.password = parsed.password
+        if self.url:
+            parsed = urlparse(self.url)
+            self.scheme = parsed.scheme
+            self.host = parsed.hostname
+            self.port = parsed.port
+            self.username = parsed.username
+            self.password = parsed.password
+        else:
+            self.scheme = None
+            self.host = None
+            self.port = None
+            self.username = None
+            self.password = None
 
     @property
-    def playwright_proxy(self) -> dict:
+    def playwright_proxy(self) -> dict | None:
+        if not self.url:
+            return None
         proxy = {"server": f"{self.scheme}://{self.host}:{self.port}"}
         if self.username and self.password:
             proxy["username"] = self.username
@@ -25,11 +34,13 @@ class ProxyConfig:
         return proxy
 
     @property
-    def python_telegram_bot_proxy(self) -> str:
-        return self.url
+    def python_telegram_bot_proxy(self) -> str | None:
+        return self.url if self.url else None
 
     @property
-    def telethon_proxy(self) -> dict:
+    def telethon_proxy(self) -> dict | None:
+        if not self.url:
+            return None
         proxy = {
             "proxy_type": self.scheme,
             "addr": self.host,
@@ -42,7 +53,9 @@ class ProxyConfig:
         return proxy
 
     @property
-    def binance_proxies(self) -> dict:
+    def binance_proxies(self) -> dict | None:
+        if not self.url:
+            return None
         auth = ""
         if self.username and self.password:
             auth = f"{self.username}:{self.password}@"
@@ -51,6 +64,15 @@ class ProxyConfig:
 
     def to_dict(self) -> dict:
         """Return safe dict for logging/JSON"""
+        if not self.url:
+            return {
+                "url": None,
+                "scheme": None,
+                "host": None,
+                "port": None,
+                "username": None,
+                "password": None,
+            }
         return {
             "url": self.url,
             "scheme": self.scheme,
@@ -62,7 +84,6 @@ class ProxyConfig:
 
     def __repr__(self):
         return f"ProxyConfig({self.to_dict()})"
-
 
 class Config:
     def __init__(self):
@@ -114,7 +135,8 @@ class Config:
                 "api_secret": "",
                 "tld": "com",
                 "proxy_url": ""
-            }
+            },
+            "tor_proxy": ""
         }
         self.TWITTER_COOKIES_DICT = {}
         if os.path.exists("config/config_remote.yaml"):
@@ -177,7 +199,7 @@ class Config:
         self.BINANCE_PROXY_URL = os.environ.get("BINANCE_PROXY_URL") or config["binance"]["proxy_url"]
 
         self.TIMEZONE = os.environ.get("TIMEZONE") or "Asia/Ho_Chi_Minh"
-        self.TOR_PROXY = ProxyConfig("socks5://127.0.0.1:9050")
+        self.TOR_PROXY = ProxyConfig(os.environ.get("TOR_PROXY") or config["tor_proxy"])
     def beautify(self):
         response = {}
         for k, v in vars(self).items():

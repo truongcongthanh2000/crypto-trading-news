@@ -6,7 +6,6 @@ import aiofiles
 from telegram import (
     Bot,
     InputMediaPhoto,
-    InputFile,
     LinkPreviewOptions
 )
 from telegram.constants import ParseMode
@@ -48,7 +47,7 @@ class NotificationHandler:
 
             # proxy if needed
             request = HTTPXRequest(
-                proxy=cfg.TOR_PROXY.python_telegram_bot_proxy if cfg.TOR_PROXY else None,
+                proxy=cfg.TOR_PROXY.python_telegram_bot_proxy,
                 connect_timeout=30,
                 read_timeout=30,
             )
