@@ -1,0 +1,88 @@
+name: crypto-trading-news
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    env:
+      # Threads
+      THREADS_LIST_USERNAME: ${{ secrets.THREADS_LIST_USERNAME }}
+      THREADS_SLA: ${{ secrets.THREADS_SLA }}
+      THREADS_SCRAPE_SLEEP_TIME: ${{ secrets.THREADS_SCRAPE_SLEEP_TIME }}
+      THREADS_ENABLED: ${{ secrets.THREADS_ENABLED }}
+
+      # Twitter
+      TWITTER_COOKIES: ${{ secrets.TWITTER_COOKIES }}
+      TWITTER_SCRAPE_SLEEP_TIME: ${{ secrets.TWITTER_SCRAPE_SLEEP_TIME }}
+      TWITTER_LIST_QUERY: ${{ secrets.TWITTER_LIST_QUERY }}
+      TWITTER_SLA: ${{ secrets.TWITTER_SLA }}
+      TWITTER_TWEETS_COUNT: ${{ secrets.TWITTER_TWEETS_COUNT }}
+      TWITTER_ENABLED: ${{ secrets.TWITTER_ENABLED }}
+
+      # Telegram
+      TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+      TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+      TELEGRAM_SESSION_STRING: ${{ secrets.TELEGRAM_SESSION_STRING }}
+      TELEGRAM_TRADE_PEER_ID: ${{ secrets.TELEGRAM_TRADE_PEER_ID }}
+      TELEGRAM_NEWS_PEER_ID: ${{ secrets.TELEGRAM_NEWS_PEER_ID }}
+      TELEGRAM_LOG_PEER_ID: ${{ secrets.TELEGRAM_LOG_PEER_ID }}
+      TELEGRAM_ALERT_CHAT_ID: ${{ secrets.TELEGRAM_ALERT_CHAT_ID }}
+      TELEGRAM_GROUP_CHAT_ID: ${{ secrets.TELEGRAM_GROUP_CHAT_ID }}
+      TELEGRAM_PNL_CHAT_ID: ${{ secrets.TELEGRAM_PNL_CHAT_ID }}
+      TELEGRAM_ROI_SIGNAL: ${{ secrets.TELEGRAM_ROI_SIGNAL }}
+      TELEGRAM_LIST_CHANNEL: ${{ secrets.TELEGRAM_LIST_CHANNEL }}
+      TELEGRAM_LIMIT: ${{ secrets.TELEGRAM_LIMIT }}
+      TELEGRAM_SLA: ${{ secrets.TELEGRAM_SLA }}
+      TELEGRAM_SCRAPE_SLEEP_TIME: ${{ secrets.TELEGRAM_SCRAPE_SLEEP_TIME }}
+      TELEGRAM_ENABLED: ${{ secrets.TELEGRAM_ENABLED }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_BOT_TRADING_TOKEN: ${{ secrets.TELEGRAM_BOT_TRADING_TOKEN }}
+      TELEGRAM_ME: ${{ secrets.TELEGRAM_ME }}
+
+      # Discord
+      DISCORD_ENABLED: ${{ secrets.DISCORD_ENABLED }}
+      DISCORD_SLA: ${{ secrets.DISCORD_SLA }}
+      DISCORD_LIMIT: ${{ secrets.DISCORD_LIMIT }}
+      DISCORD_SCRAPE_SLEEP_TIME: ${{ secrets.DISCORD_SCRAPE_SLEEP_TIME }}
+      DISCORD_LIST_CHANNEL_ID: ${{ secrets.DISCORD_LIST_CHANNEL_ID }}
+      DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+
+      # Binance
+      BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+      BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+      BINANCE_TLD: ${{ secrets.BINANCE_TLD }}
+      BINANCE_PROXY_URL: ${{ secrets.BINANCE_PROXY_URL }}
+
+      # Tor
+      TOR_PROXY_URL: ${{ secrets.TOR_PROXY_URL }}
+      TOR_PROXY_NUM_PORTS: ${{ secrets.TOR_PROXY_NUM_PORTS }}
+      NUM_PORTS: ${{ secrets.NUM_PORTS }}
+      MAX_CIRCUIT_DIRTINESS: ${{ secrets.MAX_CIRCUIT_DIRTINESS }}
+
+      # Telegram proxy
+      TELEGRAM_PROXY_URL: ${{ secrets.TELEGRAM_PROXY_URL }}
+      TELEGRAM_PROXY_NUM_PORTS: ${{ secrets.TELEGRAM_PROXY_NUM_PORTS }}
+
+      # General
+      TIMEZONE: ${{ secrets.TIMEZONE }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "Installing system dependencies inside: $(pwd)"
+          bash install.sh
+
+      - name: Run crypto-trading-news
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "Running app inside: $(pwd)"
+          bash ./run.sh "${NUM_PORTS:-1}" "${MAX_CIRCUIT_DIRTINESS:-600}"
