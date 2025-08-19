@@ -148,7 +148,6 @@ class Threads:
             self.logger.error(Message(
                 title=f"Error Threads.scrape_thread - url={url}",
                 body=f"Error: {err=}", 
-                format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
         finally:

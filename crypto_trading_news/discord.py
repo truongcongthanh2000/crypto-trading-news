@@ -58,7 +58,6 @@ class Discord:
             self.logger.error(Message(
                 title=f"Error Discord.init",
                 body=f"Error: {err=}\nSo we must disabled discord", 
-                format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID,
             ), notification=True)
             self.config.DISCORD_ENABLED = False
@@ -114,7 +113,6 @@ class Discord:
             self.logger.error(Message(
                 title=f"Error Discord.get_messages - {guild_info['name']}-{channel_info['name']}({channel_id})",
                 body=f"Error: {err=}", 
-                format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
         return []

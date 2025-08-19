@@ -34,7 +34,6 @@ class Telegram:
             self.logger.error(Message(
                 title=f"Error Telegram.scrape_messages - {channel}",
                 body=f"Error: {err=}", 
-                format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
             messages = []
@@ -52,7 +51,6 @@ class Telegram:
                 self.logger.error(Message(
                     title=f"Error Telegram.forward_messages - {channel}",
                     body=f"Error: {err=}", 
-                    format=None,
                     chat_id=self.config.TELEGRAM_LOG_PEER_ID
                 ))
                 for message in messages:
@@ -79,7 +77,6 @@ class Telegram:
             self.logger.error(Message(
                 title=f"Error Telegram.forward_messages - {channel}",
                 body=f"Error: {err=}", 
-                format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
 

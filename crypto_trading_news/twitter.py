@@ -53,7 +53,6 @@ class Twitter:
             self.logger.error(Message(
                 title=f"Error Twitter.get_tweets - {query}",
                 body=f"Error: {err=}", 
-                format=None,
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
             tweets = []
