@@ -69,7 +69,7 @@ jobs:
       TELEGRAM_PROXY_NUM_PORTS: ${{ vars.TELEGRAM_PROXY_NUM_PORTS }}
 
       # General
-    TIMEZONE: ${{ vars.TIMEZONE }}
+      TIMEZONE: ${{ vars.TIMEZONE }}
 
     steps:
       - name: Checkout repository
