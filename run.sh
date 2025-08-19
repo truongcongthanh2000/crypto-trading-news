@@ -44,6 +44,7 @@ echo "Tor started with PID $TOR_PID, log at /tmp/tor.log"
 sleep 5  # give Tor some time to bootstrap
 
 echo "[*] Starting Python module..."
+source .venv/bin/activate
 nohup python3 -m crypto_trading_news > /tmp/crypto_trading_news.log 2>&1 &
 PY_PID=$!
 echo "Python started with PID $PY_PID, log at /tmp/crypto_trading_news.log"
