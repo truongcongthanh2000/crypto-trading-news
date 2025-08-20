@@ -82,8 +82,8 @@ jobs:
           echo "Installing system dependencies inside: $(pwd)"
           bash install.sh
 
-      - name: Run crypto-trading-news
-        working-directory: ${{ github.workspace }}
+      - name: Trigger with PM2
         run: |
-          echo "Running app inside: $(pwd)"
-          bash ./run.sh "${NUM_PORTS:-1}" "${MAX_CIRCUIT_DIRTINESS:-600}"
+          pm2 delete all || true
+          NUM_PORTS=${NUM_PORTS:-1} MAX_CIRCUIT=${MAX_CIRCUIT_DIRTINESS:-600} pm2 start ecosystem.config.js
+          pm2 save

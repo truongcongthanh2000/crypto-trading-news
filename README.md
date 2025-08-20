@@ -83,10 +83,10 @@ source .venv/bin/activate
 python3 -m crypto_trading_news
 
 # Run with tor proxy, fill field tor_proxy and num_ports in config_remote.yaml, ex: "socks5://127.0.0.1:9050", 4
-bash ./run.sh [num_ports] [max_circuit_dirtiness]
-# Example: ./run.sh 5 300  -> opens 9050..9054, circuit rotates every 300s
-# Example: ./run.sh 3      -> opens 9050..9052, circuit rotates every 600s
-# Example: ./run.sh        -> opens only 9050, circuit rotates every 600s
+NUM_PORTS=<number_of_ports> MAX_CIRCUIT=<seconds> pm2 start ecosystem.config.js
+# Example: NUM_PORTS=5 MAX_CIRCUIT=300 pm2 start ecosystem.config.js -> opens 9050..9054, circuit rotates every 300s
+# Example: NUM_PORTS=5 pm2 start ecosystem.config.js -> opens 9050..9052, circuit rotates every 600s
+# Example: pm2 start ecosystem.config.js -> opens only 9050, circuit rotates every 600s
 ```
 ## Disclaimer
 

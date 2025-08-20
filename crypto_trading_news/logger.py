@@ -5,7 +5,7 @@ from .notification import NotificationHandler
 from .config import Config
 import datetime
 import pytz
-
+import sys
 class Logger:
     Logger = None
 
@@ -28,7 +28,7 @@ class Logger:
         # self.Logger.addHandler(fh)
 
         # logging to console
-        sh = logging.StreamHandler()
+        sh = logging.StreamHandler(sys.stdout)
         sh.setLevel(logging.INFO)
         sh.setFormatter(formatter)
         # self.Logger.addHandler(ch)

@@ -15,5 +15,15 @@ source .venv/bin/activate
 echo Install all packages
 pip3 install -r requirements.txt
 
+echo Install browser chromium headless mode
+playwright install --only-shell chromium
+
 echo Installing playwright chromium dependencies
 playwright install-deps chromium
+
+echo "Installing Node.js (for PM2)..."
+# Use NodeSource to get latest stable Node.js
+sudo apt install nodejs npm -y
+
+echo "Installing PM2 globally..."
+sudo npm install -g pm2
