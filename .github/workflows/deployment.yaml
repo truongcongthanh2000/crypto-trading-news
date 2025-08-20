@@ -10,68 +10,6 @@ jobs:
     runs-on: self-hosted
     environment: production
 
-    env:
-      # Threads
-      THREADS_LIST_USERNAME: ${{ secrets.THREADS_LIST_USERNAME }}
-      THREADS_SLA: ${{ vars.THREADS_SLA }}
-      THREADS_SCRAPE_SLEEP_TIME: ${{ vars.THREADS_SCRAPE_SLEEP_TIME }}
-      THREADS_ENABLED: ${{ vars.THREADS_ENABLED }}
-
-      # Twitter
-      TWITTER_COOKIES: ${{ secrets.TWITTER_COOKIES }}
-      TWITTER_SCRAPE_SLEEP_TIME: ${{ vars.TWITTER_SCRAPE_SLEEP_TIME }}
-      TWITTER_LIST_QUERY: ${{ secrets.TWITTER_LIST_QUERY }}
-      TWITTER_SLA: ${{ vars.TWITTER_SLA }}
-      TWITTER_TWEETS_COUNT: ${{ vars.TWITTER_TWEETS_COUNT }}
-      TWITTER_ENABLED: ${{ vars.TWITTER_ENABLED }}
-
-      # Telegram
-      TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
-      TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
-      TELEGRAM_SESSION_STRING: ${{ secrets.TELEGRAM_SESSION_STRING }}
-      TELEGRAM_TRADE_PEER_ID: ${{ secrets.TELEGRAM_TRADE_PEER_ID }}
-      TELEGRAM_NEWS_PEER_ID: ${{ secrets.TELEGRAM_NEWS_PEER_ID }}
-      TELEGRAM_LOG_PEER_ID: ${{ secrets.TELEGRAM_LOG_PEER_ID }}
-      TELEGRAM_ALERT_CHAT_ID: ${{ secrets.TELEGRAM_ALERT_CHAT_ID }}
-      TELEGRAM_GROUP_CHAT_ID: ${{ secrets.TELEGRAM_GROUP_CHAT_ID }}
-      TELEGRAM_PNL_CHAT_ID: ${{ secrets.TELEGRAM_PNL_CHAT_ID }}
-      TELEGRAM_ROI_SIGNAL: ${{ vars.TELEGRAM_ROI_SIGNAL }}
-      TELEGRAM_LIST_CHANNEL: ${{ secrets.TELEGRAM_LIST_CHANNEL }}
-      TELEGRAM_LIMIT: ${{ vars.TELEGRAM_LIMIT }}
-      TELEGRAM_SLA: ${{ vars.TELEGRAM_SLA }}
-      TELEGRAM_SCRAPE_SLEEP_TIME: ${{ vars.TELEGRAM_SCRAPE_SLEEP_TIME }}
-      TELEGRAM_ENABLED: ${{ vars.TELEGRAM_ENABLED }}
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_BOT_TRADING_TOKEN: ${{ secrets.TELEGRAM_BOT_TRADING_TOKEN }}
-      TELEGRAM_ME: ${{ vars.TELEGRAM_ME }}
-
-      # Discord
-      DISCORD_ENABLED: ${{ vars.DISCORD_ENABLED }}
-      DISCORD_SLA: ${{ vars.DISCORD_SLA }}
-      DISCORD_LIMIT: ${{ vars.DISCORD_LIMIT }}
-      DISCORD_SCRAPE_SLEEP_TIME: ${{ vars.DISCORD_SCRAPE_SLEEP_TIME }}
-      DISCORD_LIST_CHANNEL_ID: ${{ secrets.DISCORD_LIST_CHANNEL_ID }}
-      DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-
-      # Binance
-      BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
-      BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
-      BINANCE_TLD: ${{ vars.BINANCE_TLD }}
-      BINANCE_PROXY_URL: ${{ secrets.BINANCE_PROXY_URL }}
-
-      # Tor
-      TOR_PROXY_URL: ${{ vars.TOR_PROXY_URL }}
-      TOR_PROXY_NUM_PORTS: ${{ vars.TOR_PROXY_NUM_PORTS }}
-      NUM_PORTS: $TOR_PROXY_NUM_PORTS
-      MAX_CIRCUIT_DIRTINESS: ${{ vars.MAX_CIRCUIT_DIRTINESS }}
-
-      # Telegram proxy
-      TELEGRAM_PROXY_URL: ${{ vars.TELEGRAM_PROXY_URL }}
-      TELEGRAM_PROXY_NUM_PORTS: ${{ vars.TELEGRAM_PROXY_NUM_PORTS }}
-
-      # General
-      TIMEZONE: ${{ vars.TIMEZONE }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -82,7 +20,15 @@ jobs:
           echo "Installing system dependencies inside: $(pwd)"
           bash install.sh
 
+      - name: Create local .env 
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "Creating local .env in $(pwd)"
+          touch .env
+          echo "${{ secrets.ENV_FILE }}" > .env
+
       - name: Trigger with PM2
+        working-directory: ${{ github.workspace }}
         run: |
           pm2 delete all || true
           NUM_PORTS=${NUM_PORTS:-1} MAX_CIRCUIT=${MAX_CIRCUIT_DIRTINESS:-600} pm2 start ecosystem.config.js

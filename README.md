@@ -37,9 +37,9 @@ This project contains **two complementary tools** for cryptocurrency and financi
 git clone https://github.com/truongcongthanh2000/crypto-trading-news
 cd crypto-trading-news
 
-# Create config
-cp config/config_remote.yaml.cfg config/config_remote.yaml
-# Fill required fields in config_remote.yaml
+# Create local file include all environment variables
+cp .env.example .env
+# Fill required fields in .env
 
 # Install dependencies
 pip3 install -r requirements.txt
@@ -71,9 +71,9 @@ If you prefer to run this project on your own server instead of a PaaS like Hero
 git clone https://github.com/truongcongthanh2000/crypto-trading-news
 cd crypto-trading-news
 
-# Create config
-cp config/config_remote.yaml.cfg config/config_remote.yaml
-# Fill required fields in config_remote.yaml
+# Create local file include all environment variables
+cp .env.example .env
+# Fill required fields in .env
 
 # Install system dependencies
 bash install.sh
