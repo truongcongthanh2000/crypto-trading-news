@@ -31,5 +31,5 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           pm2 delete all || true
-          NUM_PORTS=${NUM_PORTS:-1} MAX_CIRCUIT=${MAX_CIRCUIT_DIRTINESS:-600} pm2 start ecosystem.config.js
+          RUNNER_TRACKING_ID="" && NUM_PORTS=${NUM_PORTS:-1} MAX_CIRCUIT=${MAX_CIRCUIT_DIRTINESS:-600} pm2 start ecosystem.config.js
           pm2 save
