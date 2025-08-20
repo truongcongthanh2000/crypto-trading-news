@@ -10,29 +10,9 @@ from datetime import datetime
 import pytz
 import re
 from .util import is_command_trade
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, Browser
 import asyncio
-from random import randint
 
-def remove_redundant_spaces(text: str):
-    lines = text.split('\n')
-    cleaned_lines = []
-
-    for line in lines:
-        # Check if it's a progress line
-        if re.match(r'^\|\s*.*?\s*\|.*$', line):
-            if '100%' in line:
-                # Keep the 100% progress line, but remove redundant spaces
-                line = re.sub(r'\|\s*', '|', line)  # Remove spaces after first |
-                line = re.sub(r'\s*\|', '|', line)  # Remove spaces before second |
-                cleaned_lines.append(line)
-            else:
-                # Skip all other progress lines (0%-90%)
-                continue
-        else:
-            cleaned_lines.append(line)
-
-    return '\n'.join(cleaned_lines)
 class Threads:
     """
     A basic interface for interacting with Threads.
@@ -42,9 +22,6 @@ class Threads:
         self.config = config
         self.logger = logger
         self.map_last_timestamp = {}
-
-    async def close_browser(self):
-        await self.browser.close()
 
     # Note: we'll also be using parse_thread function we wrote earlier:
 
@@ -99,67 +76,64 @@ class Threads:
 
 
 
-    async def scrape_thread(self, url: str) -> dict:
+    async def scrape_thread(self, url: str, browser: Browser) -> dict:
         """Scrape Threads their recent posts and there profile if exists from a given URL"""
         parsed = {
             "user": {},
             "threads": [],
         }
         page = None
-        browser = None
+        context = None
         try:
-            async with async_playwright() as pw:
-                # start Playwright browser
-                browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
-                context = await browser.new_context(viewport={"width": 1920, "height": 1080}, proxy=self.config.TOR_PROXY.playwright_proxy)
-                page = await context.new_page()
+            context = await browser.new_context(viewport={"width": 1920, "height": 1080}, proxy=self.config.TOR_PROXY.playwright_proxy)
+            page = await context.new_page()
 
-                await page.goto(url, wait_until="domcontentloaded", timeout=10000)
-                # wait for page to finish loading
-                await page.wait_for_selector("[data-pressable-container=true]", timeout=5000)
-                
-                # Extract all JSON blobs directly in the browser
-                hidden_datasets = await page.evaluate('''() => {
-                    const scripts = document.querySelectorAll('script[type="application/json"][data-sjs]');
-                    const parsed = [];
-                    for (const el of scripts) {
-                        const txt = el.textContent;
-                        if (!txt.includes('"ScheduledServerJS"')) continue;
-                        const isProfile = txt.includes('follower_count');
-                        const isThreads = txt.includes('thread_items');
-                        if (!isProfile && !isThreads) continue;
-                        try {
-                            parsed.push({ data: JSON.parse(txt), isProfile, isThreads });
-                        } catch {}
-                    }
-                    return parsed;
-                }''')
-                for item in hidden_datasets:
-                    if item['isProfile']:
-                        user_data = nested_lookup('user', item['data'])
-                        if user_data:
-                            parsed['user'] = self.parse_profile(user_data[0])
-                    if item['isThreads']:
-                        thread_items = nested_lookup('thread_items', item['data'])
-                        parsed['threads'].extend(
-                            self.parse_thread(t) for thread in thread_items for t in thread
-                        )
+            await page.goto(url, wait_until="domcontentloaded", timeout=6000)
+            # wait for page to finish loading
+            await page.wait_for_selector("[data-pressable-container=true]", timeout=6000)
+            
+            # Extract all JSON blobs directly in the browser
+            hidden_datasets = await page.evaluate('''() => {
+                const scripts = document.querySelectorAll('script[type="application/json"][data-sjs]');
+                const parsed = [];
+                for (const el of scripts) {
+                    const txt = el.textContent;
+                    if (!txt.includes('"ScheduledServerJS"')) continue;
+                    const isProfile = txt.includes('follower_count');
+                    const isThreads = txt.includes('thread_items');
+                    if (!isProfile && !isThreads) continue;
+                    try {
+                        parsed.push({ data: JSON.parse(txt), isProfile, isThreads });
+                    } catch {}
+                }
+                return parsed;
+            }''')
+            for item in hidden_datasets:
+                if item['isProfile']:
+                    user_data = nested_lookup('user', item['data'])
+                    if user_data:
+                        parsed['user'] = self.parse_profile(user_data[0])
+                if item['isThreads']:
+                    thread_items = nested_lookup('thread_items', item['data'])
+                    parsed['threads'].extend(
+                        self.parse_thread(t) for thread in thread_items for t in thread
+                    )
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Threads.scrape_thread - url={url}",
                 body=f"Error: {err=}", 
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), notification=True)
+            ))
         finally:
             if page:
                 await page.close()
-            if browser:
-                await browser.close()
+            if context:
+                await context.close()
         return parsed
 
-    async def retrieve_user_posts(self, username: str) -> list[Message]:
+    async def retrieve_user_posts(self, username: str, browser: Browser) -> list[Message]:
         url = f'{self.BASE_URL}/@{username}'
-        response = await self.scrape_thread(url)
+        response = await self.scrape_thread(url, browser)
         time_now = int(time.time())
         max_timestamp = 0
         for thread in response['threads']:
@@ -195,7 +169,12 @@ class Threads:
             return
         list_username = self.config.THREADS_LIST_USERNAME
         # self.logger.info(Message(f"Threads.scrape_user_posts with list username: {', '.join(list_username)}"))
-        for u in list_username:
-            await self.retrieve_user_posts(u)
-            await asyncio.sleep(randint(2, 5))
-        # await asyncio.gather(*(self.retrieve_user_posts(u) for u in list_username))
+        async with async_playwright() as pw:
+            # start Playwright browser
+            browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
+            await asyncio.gather(*(self.retrieve_user_posts(u, browser) for u in list_username))
+            await browser.close()
+
+        # for u in list_username:
+        #     await self.retrieve_user_posts(u)
+        #     await asyncio.sleep(randint(2, 5))

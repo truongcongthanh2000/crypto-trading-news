@@ -21,6 +21,7 @@ import time
 import pytz
 import asyncio
 from collections import defaultdict
+from playwright.async_api import async_playwright, Browser
 
 JOB_NAME_FSTATS = "fstats"
 JOB_NAME_FALERT_TRACK = "falert_track"
@@ -515,12 +516,15 @@ class Command:
             remove_job_if_exists(JOB_NAME_FREPLIES_TRACK, context)
             await context.bot.send_message(chat_id, text=telegramify_markdown.markdownify("👋 You don't have any replies for tracking at this time!\nJob was removed, please command `/freplies_track` interval(seconds) when create a new reply."), parse_mode=ParseMode.MARKDOWN_V2)
             return
-        for message_id in self.map_tracking_replies:
-            await self.f_get_replies(message_id)
+        async with async_playwright() as pw:
+            # start Playwright browser
+            browser: Browser = await pw.chromium.launch(headless=True, chromium_sandbox=False)
+            await asyncio.gather(*(self.f_get_replies(message_id, browser) for message_id in self.map_tracking_replies))
+            await browser.close()
 
-    async def f_get_replies(self, message_id: str) -> list[Message]:
+    async def f_get_replies(self, message_id: str, browser: Browser) -> list[Message]:
         threads_reply = self.map_tracking_replies[message_id]
-        response = await self.threads.scrape_thread(threads_reply.url)
+        response = await self.threads.scrape_thread(threads_reply.url, browser)
         if "threads" not in response or len(response["threads"]) == 0:
             return
         thread = response["threads"][0]
