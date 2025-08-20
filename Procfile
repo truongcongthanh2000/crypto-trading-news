@@ -1,1 +1,1 @@
-bot: python -m crypto_trading_news
+bot: sh -c 'python install --only-shell chromium & python -m crypto_trading_news'
