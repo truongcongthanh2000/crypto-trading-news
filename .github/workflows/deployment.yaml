@@ -14,7 +14,6 @@ jobs:
       # Tor
       TOR_PROXY_URL: ${{ vars.TOR_PROXY_URL }}
       TOR_PROXY_NUM_PORTS: ${{ vars.TOR_PROXY_NUM_PORTS }}
-      NUM_PORTS: $TOR_PROXY_NUM_PORTS
       MAX_CIRCUIT_DIRTINESS: ${{ vars.MAX_CIRCUIT_DIRTINESS }}
 
     steps:
@@ -40,5 +39,5 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           pm2 delete all || true
-          RUNNER_TRACKING_ID="" && NUM_PORTS=${NUM_PORTS:-1} MAX_CIRCUIT=${MAX_CIRCUIT_DIRTINESS:-600} pm2 start ecosystem.config.js
+          RUNNER_TRACKING_ID="" NUM_PORTS=${TOR_PROXY_NUM_PORTS:-1} MAX_CIRCUIT=${MAX_CIRCUIT_DIRTINESS:-600} pm2 start ecosystem.config.js
           pm2 save
