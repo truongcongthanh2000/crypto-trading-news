@@ -10,6 +10,13 @@ jobs:
     runs-on: self-hosted
     environment: production
 
+    env:
+      # Tor
+      TOR_PROXY_URL: ${{ vars.TOR_PROXY_URL }}
+      TOR_PROXY_NUM_PORTS: ${{ vars.TOR_PROXY_NUM_PORTS }}
+      NUM_PORTS: $TOR_PROXY_NUM_PORTS
+      MAX_CIRCUIT_DIRTINESS: ${{ vars.MAX_CIRCUIT_DIRTINESS }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,6 +33,8 @@ jobs:
           echo "Creating local .env in $(pwd)"
           touch .env
           echo "${{ secrets.ENV_FILE }}" > .env
+          echo "TOR_PROXY_URL=$TOR_PROXY_URL" >> .env
+          echo "TOR_PROXY_NUM_PORTS=$TOR_PROXY_NUM_PORTS" >> .env
 
       - name: Trigger with PM2
         working-directory: ${{ github.workspace }}
