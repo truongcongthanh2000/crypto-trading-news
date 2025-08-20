@@ -57,6 +57,8 @@ In this project, I use [Heroku](https://www.heroku.com/) as cloud platform for d
 - Region: **Europe** (**Note: Avoid choose USA because lack of support API from binance.us**)
 - Stack: **heroku-22** (**Note: Do not use latest version heroku-24 because of incompatible with playwright**)
 - Add-ons: **[Fixie](https://elements.heroku.com/addons/fixie)** for forward-proxy to binance APIs.
+
+**Notes**: To scrape [Threads](https://www.threads.com), you need proxies to avoid rate limits. If you already have a rotating proxy service, set the environment variable ```TOR_PROXY_URL``` with its address. If not, note that [Heroku](https://www.heroku.com) is not suitable for this project because it cannot run Tor or custom proxy services. In that case, it’s recommended to deploy on a VPS, where you have full control over networking and proxy configuration.
 ### VPS
 If you prefer to run this project on your own server instead of a PaaS like Heroku, you can deploy to a Virtual Private Server (VPS) such as **AWS EC2**, **DigitalOcean Droplet**, or **Vultr Instance**.
 
@@ -76,13 +78,15 @@ cp config/config_remote.yaml.cfg config/config_remote.yaml
 # Install system dependencies
 bash install.sh
 
-# Run
+# Run without tor proxy
 source .venv/bin/activate
 python3 -m crypto_trading_news
 
-# If you use tor proxy, you should start service tor before running
-sudo systemctl start tor
-# Also fill field tor_proxy in config_remote.yaml: "socks5://127.0.0.1:9050"
+# Run with tor proxy, fill field tor_proxy and num_ports in config_remote.yaml, ex: "socks5://127.0.0.1:9050", 4
+bash ./run.sh [num_ports] [max_circuit_dirtiness]
+# Example: ./run.sh 5 300  -> opens 9050..9054, circuit rotates every 300s
+# Example: ./run.sh 3      -> opens 9050..9052, circuit rotates every 600s
+# Example: ./run.sh        -> opens only 9050, circuit rotates every 600s
 ```
 ## Disclaimer
 

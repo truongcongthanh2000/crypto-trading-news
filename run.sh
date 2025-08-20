@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# Usage: ./run.sh [num_ports]
-# Example: ./run.sh 5  -> opens 9050..9054
-# Example: ./run.sh    -> opens only 9050
+# Usage: ./run.sh [num_ports] [max_circuit_dirtiness]
+# Example: ./run.sh 5 300  -> opens 9050..9054, circuit rotates every 300s
+# Example: ./run.sh 3      -> opens 9050..9052, circuit rotates every 600s
+# Example: ./run.sh        -> opens only 9050, circuit rotates every 600s
 
 NUM_PORTS=${1:-1}
+MAX_CIRCUIT=${2:-600}
 
 echo "[*] Cleaning old processes..."
 
@@ -35,8 +37,9 @@ done
 # Optionally pin exit nodes
 # echo "ExitNodes {sg}" >> $TORRC
 # echo "StrictNodes 1" >> $TORRC
+echo "MaxCircuitDirtiness $MAX_CIRCUIT" >> $TORRC
 
-echo "[*] Starting Tor with custom config..."
+echo "[*] Starting Tor with custom config (MaxCircuitDirtiness=$MAX_CIRCUIT)..."
 tor -f $TORRC > /tmp/tor.log 2>&1 &
 TOR_PID=$!
 echo "Tor started with PID $TOR_PID, log at /tmp/tor.log"

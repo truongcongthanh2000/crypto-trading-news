@@ -47,7 +47,7 @@ class NotificationHandler:
 
             # proxy if needed
             request = HTTPXRequest(
-                proxy=cfg.TOR_PROXY.python_telegram_bot_proxy,
+                proxy=cfg.TELEGRAM_PROXY.python_telegram_bot_proxy,
                 connect_timeout=30,
                 read_timeout=30,
             )

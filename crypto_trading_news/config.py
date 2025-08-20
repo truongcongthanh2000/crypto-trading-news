@@ -96,7 +96,7 @@ class ProxyConfig:
             "base_url": self.base_url,
             "scheme": self.scheme,
             "host": self.host,
-            "ports": self._ports,
+            "ports": [self._ports[0], "....", self._ports[-1]],
             "username": "***" if self.username else None,
             "password": "***" if self.password else None,
         }
@@ -156,6 +156,10 @@ class Config:
                 "proxy_url": ""
             },
             "tor_proxy": {
+                "url": "",
+                "num_ports": ""
+            },
+            "telegram_proxy": {
                 "url": "",
                 "num_ports": ""
             }
@@ -222,6 +226,7 @@ class Config:
 
         self.TIMEZONE = os.environ.get("TIMEZONE") or "Asia/Ho_Chi_Minh"
         self.TOR_PROXY = ProxyConfig(os.environ.get("TOR_PROXY_URL") or config["tor_proxy"]["url"], int(os.environ.get("TOR_PROXY_NUM_PORTS") or config["tor_proxy"]["num_ports"] or "1"))
+        self.TELEGRAM_PROXY = ProxyConfig(os.environ.get("TELEGRAM_PROXY_URL") or config["telegram_proxy"]["url"], int(os.environ.get("TELEGRAM_PROXY_NUM_PORTS") or config["telegram_proxy"]["num_ports"] or "1"))
     def beautify(self):
         response = {}
         for k, v in vars(self).items():

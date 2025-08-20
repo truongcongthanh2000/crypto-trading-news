@@ -36,8 +36,8 @@ async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twi
     scheduler.start()
 
     application_builder = Application.builder().token(config.TELEGRAM_BOT_TRADING_TOKEN).read_timeout(7).get_updates_read_timeout(42)
-    if config.TOR_PROXY.python_telegram_bot_proxy:
-        application_builder = application_builder.proxy(config.TOR_PROXY.python_telegram_bot_proxy).get_updates_proxy(config.TOR_PROXY.python_telegram_bot_proxy)
+    if config.TELEGRAM_PROXY.python_telegram_bot_proxy:
+        application_builder = application_builder.proxy(config.TELEGRAM_PROXY.python_telegram_bot_proxy).get_updates_proxy(config.TELEGRAM_PROXY.python_telegram_bot_proxy)
     application = application_builder.build()
     application.add_handler(CommandHandler("help", command.help))
     application.add_handler(CommandHandler("start", command.start))
