@@ -11,6 +11,8 @@ jobs:
     environment: production
 
     env:
+      # TWITTER
+      TWITTER_COOKIES: ${{ secrets.TWITTER_COOKIES }}
       # Tor
       TOR_PROXY_URL: ${{ vars.TOR_PROXY_URL }}
       TOR_PROXY_NUM_PORTS: ${{ vars.TOR_PROXY_NUM_PORTS }}
@@ -34,6 +36,7 @@ jobs:
           echo "${{ secrets.ENV_FILE }}" > .env
           echo "TOR_PROXY_URL=$TOR_PROXY_URL" >> .env
           echo "TOR_PROXY_NUM_PORTS=$TOR_PROXY_NUM_PORTS" >> .env
+          echo "TWITTER_COOKIES=$TWITTER_COOKIES" >> .env
 
       - name: Trigger with PM2
         working-directory: ${{ github.workspace }}
