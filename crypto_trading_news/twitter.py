@@ -8,7 +8,7 @@ import time
 import pytz
 from datetime import datetime
 from random import randint
-
+from .util import is_command_trade
 class Twitter:
     def __init__(self, config: Config, logger: Logger):
         self.config = config
@@ -18,7 +18,6 @@ class Twitter:
         self.map_timestamp_by_user = {} 
 
     def filter_tweets(self, tweets: Result[Tweet]) -> list[Message]:
-        twitter_tweets = []
         time_now = int(time.time())
         update_max_timestamp = {}
         for tweet in tweets:
@@ -35,39 +34,43 @@ class Twitter:
                 update_max_timestamp[user_id] = max(update_max_timestamp[user_id], tweet_timestamp)
             else:
                 update_max_timestamp[user_id] = tweet_timestamp
-            twitter_tweets.append(Message(
+            chat_id = self.config.TELEGRAM_NEWS_PEER_ID
+            if is_command_trade(tweet.full_text):
+                chat_id = self.config.TELEGRAM_TRADE_PEER_ID
+            message = Message(
                 title= f"Twitter - {user_name} - Time: {datetime.fromtimestamp(tweet_timestamp, tz=pytz.timezone(self.config.TIMEZONE))}",
                 body= f"{tweet.full_text}\n\n[Link: {url}]({url})",
-                chat_id=self.config.TELEGRAM_TRADE_PEER_ID
-            ))
+                chat_id=chat_id
+            )
+            if len(tweet.media) > 0:
+                images = []
+                for image in tweet.media:
+                    images.append(image.media_url)
+                if len(images) > 1:
+                    message.images = images
+                else:
+                    message.image = images[0]
+            self.logger.info(message, notification=True)
         for user_id in update_max_timestamp:
-            self.map_timestamp_by_user[user_id] = update_max_timestamp[user_id]
-        return twitter_tweets
-        
+            self.map_timestamp_by_user[user_id] = update_max_timestamp[user_id]        
 
-    def get_tweets(self, query: str) -> list[Message]:
-        loop = asyncio.get_event_loop()
+    async def get_tweets(self, query: str) -> list[Message]:
         try:
-            tweets = loop.run_until_complete(self.client.search_tweet(query, product='Latest', count=self.config.TWITTER_TWEETS_COUNT))
+            tweets = await self.client.search_tweet(query, product='Latest', count=self.config.TWITTER_TWEETS_COUNT)
+            self.filter_tweets(tweets)
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Twitter.get_tweets - {query}",
                 body=f"Error: {err=}", 
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
-            tweets = []
-            # loop.close()
-        return self.filter_tweets(tweets)
     
-    def scrape_user_tweets(self):
+    async def scrape_user_tweets(self):
         if self.config.TWITTER_ENABLED == False:
             return
         list_query = self.config.TWITTER_LIST_QUERY
         self.logger.info(Message(f"Twitter.scrape_user_tweets with list query: {', '.join(list_query)}"))
-        tweets = []
         for query in list_query:
-            tweets.extend(self.get_tweets(query))
-            time.sleep(randint(5, 10))
-        for tweet in tweets:
-            self.logger.info(tweet, notification=True)
+            await self.get_tweets(query)
+            await asyncio.sleep(randint(5, 10))
 
