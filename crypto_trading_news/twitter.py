@@ -35,8 +35,9 @@ class Twitter:
             else:
                 update_max_timestamp[user_id] = tweet_timestamp
             chat_id = self.config.TELEGRAM_NEWS_PEER_ID
-            if is_command_trade(tweet.full_text):
-                chat_id = self.config.TELEGRAM_TRADE_PEER_ID
+            # TODO: Add logic force chat_id based on query
+            # if is_command_trade(tweet.full_text):
+            #     chat_id = self.config.TELEGRAM_TRADE_PEER_ID
             message = Message(
                 title= f"Twitter - {user_name} - Time: {datetime.fromtimestamp(tweet_timestamp, tz=pytz.timezone(self.config.TIMEZONE))}",
                 body= f"{tweet.full_text}\n\n[Link: {url}]({url})",
