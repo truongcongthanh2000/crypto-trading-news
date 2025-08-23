@@ -76,7 +76,7 @@ class Threads:
 
 
 
-    async def scrape_thread(self, url: str, browser: Browser) -> dict:
+    async def scrape_thread(self, url: str, browser: Browser, is_posts = False) -> dict:
         """Scrape Threads their recent posts and there profile if exists from a given URL"""
         parsed = {
             "user": {},
@@ -92,6 +92,7 @@ class Threads:
             # wait for page to finish loading
             await page.wait_for_selector("[data-pressable-container=true]", timeout=6000)
             
+            url_clean = url.removesuffix("?sort_order=recent")
             # Extract all JSON blobs directly in the browser
             hidden_datasets = await page.evaluate('''() => {
                 const scripts = document.querySelectorAll('script[type="application/json"][data-sjs]');
@@ -115,9 +116,11 @@ class Threads:
                         parsed['user'] = self.parse_profile(user_data[0])
                 if item['isThreads']:
                     thread_items = nested_lookup('thread_items', item['data'])
-                    parsed['threads'].extend(
-                        self.parse_thread(t) for thread in thread_items for t in thread
-                    )
+                    parse_thread_items = [self.parse_thread(t) for thread in thread_items for t in thread]
+                    if len(parse_thread_items) > 0 and is_posts and parse_thread_items[0]["url"] != url_clean:
+                        continue
+                    parsed['threads'].extend(parse_thread_items)
+                        
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Threads.scrape_thread - url={url}",

@@ -524,7 +524,7 @@ class Command:
 
     async def f_get_replies(self, message_id: str, browser: Browser) -> list[Message]:
         threads_reply = self.map_tracking_replies[message_id]
-        response = await self.threads.scrape_thread(threads_reply.url, browser)
+        response = await self.threads.scrape_thread(threads_reply.url, browser, True)
         if "threads" not in response or len(response["threads"]) == 0:
             return
         thread = response["threads"][0]
