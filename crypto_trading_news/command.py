@@ -411,7 +411,6 @@ class Command:
     
     # falert_list
     async def falert_list(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        chat_id = self.config.TELEGRAM_ALERT_CHAT_ID
         try:
             msg = ""
             for symbol in self.map_alert_price:
@@ -421,7 +420,7 @@ class Command:
                 for price_alert in self.map_alert_price[symbol]:
                     msg += f"- **{str(price_alert)}**\n"
             msg = "🔔 Here is your list alert:\n" + msg
-            await context.bot.send_message(chat_id, text=telegramify_markdown.markdownify(msg), parse_mode=ParseMode.MARKDOWN_V2, link_preview_options=LinkPreviewOptions(is_disabled=True))
+            await update.message.reply_text(text=telegramify_markdown.markdownify(msg), parse_mode=ParseMode.MARKDOWN_V2)
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.falert_list",
@@ -474,16 +473,19 @@ class Command:
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
 
+    @property
+    def build_replies_list(self):
+        msg = ""
+        for message_id in self.map_tracking_replies:
+            threads_reply = self.map_tracking_replies[message_id]
+            msg += f"👉 **{message_id}**: **{threads_reply.url}** - Time: {datetime.fromtimestamp(threads_reply.max_timestamp, tz=pytz.timezone(self.config.TIMEZONE))}\n"
+        msg = "🔔 Here is your list replies:\n" + msg
+        return msg
+
     # freplies_list
     async def freplies_list(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        chat_id = self.config.TELEGRAM_LOG_PEER_ID
         try:
-            msg = ""
-            for message_id in self.map_tracking_replies:
-                threads_reply = self.map_tracking_replies[message_id]
-                msg += f"👉 **{message_id}**: **{threads_reply.url}** - Time: {datetime.fromtimestamp(threads_reply.max_timestamp, tz=pytz.timezone(self.config.TIMEZONE))}\n"
-            msg = "🔔 Here is your list replies:\n" + msg
-            await context.bot.send_message(chat_id, text=telegramify_markdown.markdownify(msg), parse_mode=ParseMode.MARKDOWN_V2, link_preview_options=LinkPreviewOptions(is_disabled=True))
+            await update.message.reply_text(text=telegramify_markdown.markdownify(self.build_replies_list), parse_mode=ParseMode.MARKDOWN_V2, link_preview_options=LinkPreviewOptions(is_disabled=True))
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.freplies_list",
@@ -493,7 +495,6 @@ class Command:
 
     async def freplies_remove(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
-            chat_id = self.config.TELEGRAM_LOG_PEER_ID
             list_message_id = []
             if len(context.args) == 1 and context.args[0] == 'all':
                 list_message_id.append('all message_id')
@@ -502,7 +503,7 @@ class Command:
                 for message_id in context.args:
                     list_message_id.append(message_id)
                     self.map_tracking_replies.pop(message_id, 'None')
-            await context.bot.send_message(chat_id, text=telegramify_markdown.markdownify(f"👋 Your removed replies for **{', '.join(list_message_id)}** successfully\nCommand `/freplies_list` to see current replies."), parse_mode=ParseMode.MARKDOWN_V2)
+            await update.message.reply_text(text=telegramify_markdown.markdownify(f"👋 Your removed replies for **{', '.join(list_message_id)}** successfully\n{self.build_replies_list}"), parse_mode=ParseMode.MARKDOWN_V2)
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.freplies_remove - {' '.join(context.args)}",
