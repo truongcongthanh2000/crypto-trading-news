@@ -6,7 +6,7 @@ module.exports = {
       args: [
         "-c",
         `
-        sudo rm -rf /tmp/*
+        sudo rm -rf /tmp/*.log
         sudo rm -f /var/lib/tor/state
         TORRC=/tmp/torrc-multi
         rm -f $TORRC
