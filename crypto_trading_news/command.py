@@ -750,7 +750,7 @@ class Command:
             "quantity": str(quantity),
             "type": "LIMIT",
             "timeInForce": "GTC",
-            "price": price,
+            "price": str(price),
         }
         batch_orders = [order]
         if len(context.args) > 5:
