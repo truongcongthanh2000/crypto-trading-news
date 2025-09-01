@@ -777,7 +777,7 @@ class Command:
                 "quantity": str(quantity)
             }
             batch_orders.append(tp_order)
-        return order
+        return batch_orders
 
     def f_get_close_positions(self, symbol: str):
         positions = self.binance_api.get_current_position(symbol=symbol)
