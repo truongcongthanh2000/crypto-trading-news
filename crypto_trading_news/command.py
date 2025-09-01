@@ -718,7 +718,8 @@ class Command:
                 "stopPrice": context.args[4],
                 "reduceOnly": "true",
                 "timeInForce": "GTE_GTC",
-                "workingType": "MARK_PRICE"
+                "workingType": "MARK_PRICE",
+                "quantity": str(quantity)
             }
             batch_orders.append(sl_order)
         if len(context.args) > 5:
@@ -729,7 +730,8 @@ class Command:
                 "stopPrice": context.args[5],
                 "reduceOnly": "true",
                 "timeInForce": "GTE_GTC",
-                "workingType": "MARK_PRICE"
+                "workingType": "MARK_PRICE",
+                "quantity": str(quantity)
             }
             batch_orders.append(tp_order)
         return batch_orders
@@ -759,7 +761,8 @@ class Command:
                 "stopPrice": context.args[5],
                 "reduceOnly": "true",
                 "timeInForce": "GTE_GTC",
-                "workingType": "MARK_PRICE"
+                "workingType": "MARK_PRICE",
+                "quantity": str(quantity)
             }
             batch_orders.append(sl_order)
         if len(context.args) > 6:
@@ -770,7 +773,8 @@ class Command:
                 "stopPrice": context.args[6],
                 "reduceOnly": "true",
                 "timeInForce": "GTE_GTC",
-                "workingType": "MARK_PRICE"
+                "workingType": "MARK_PRICE",
+                "quantity": str(quantity)
             }
             batch_orders.append(tp_order)
         return order
