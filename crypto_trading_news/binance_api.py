@@ -67,7 +67,17 @@ class BinanceAPI:
         return self.binance_client.futures_exchange_info()
 
     def f_order(self, order: dict):
-        return self.binance_client.futures_create_order(side=order["side"], type=order["type"], symbol=order["symbol"], quantity=order["quantity"], timeInForce=order["timeInForce"], price=order["price"])
+        # Define the set of fields futures_create_order accepts
+        allowed_keys = {
+            "symbol", "side", "type", "timeInForce", "quantity", "reduceOnly",
+            "price", "newClientOrderId", "stopPrice", "closePosition",
+            "positionSide", "activationPrice", "callbackRate", "workingType",
+            "priceProtect", "newOrderRespType"
+        }
+
+        # Filter only valid keys
+        clean_order = {k: v for k, v in order.items() if k in allowed_keys}
+        return self.binance_client.futures_create_order(**clean_order)
 
     def f_batch_order(self, batch_orders: list[dict]):
         return self.binance_client.futures_place_batch_order(batchOrders=batch_orders)

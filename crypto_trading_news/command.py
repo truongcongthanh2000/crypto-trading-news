@@ -67,7 +67,7 @@ class Command:
             ('fch', "Get chart 'fch coin interval(opt, df=15m) range(opt, df=21 * interval)'"),
             ('fp', "Get prices 'fp coin1 coin2 ....'"),
             ('fstats', "Schedule get stats 'fstats interval(seconds)'"),
-            ('flimit', 'flimit buy/sell coin leverage margin price'),
+            ('flimit', 'flimit buy/sell coin leverage margin price sl(optional) tp(optional)'),
             ('ftpsl', "Set tp/sl position 'ftpsl coin sl(optional) tp(optional)"),
             ('falert', "falert op1:coin1:price1_1,price1_2,...(:gap1, default=0.5%) ..."),
             ('falert_track', "Tracking all alert price 'falert_track intervals(seconds)'"),
@@ -102,7 +102,7 @@ class Command:
         msg += "/fch - Get chart 'fch coin interval(optional, default=15m) range(optional, default=21 * interval)'\n"
         msg += "/fp - Get prices 'fp coin1 coin2 ....'\n"
         msg += "/fstats - Schedule get stats for current positions 'fstats interval(seconds)'\n"
-        msg += "/flimit - Make futures limit order 'flimit buy/sell coin leverage margin price'\n"
+        msg += "/flimit - Make futures limit order 'flimit buy/sell coin leverage margin price sl(optional) tp(optional)'\n"
         msg += "/ftpsl - Set tp/sl position 'ftpsl coin sl(optional) tp(optional)'\n"
         msg += "/falert - Set alert price 'falert op1:coin1:price1_1,price1_2,...(:gap1, default=0.5%) ...'\n"
         msg += "/falert_track - Tracking all alert price 'falert_track intervals(seconds)'\n"
@@ -212,7 +212,7 @@ class Command:
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
 
-    # flimit buy/sell coin leverage margin price
+    # flimit buy/sell coin leverage margin price sl(optional) tp(optional)
     async def flimit(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         side = context.args[0]
         coin = context.args[1].upper()
@@ -223,18 +223,21 @@ class Command:
             symbol = coin + "USDT"
             # try to change leverage and margin_type for symbol first
             self.f_set_leverage_and_margin_type(symbol, leverage)
-            order = self.f_get_limit_order(side, symbol, leverage, margin, price)
-            self.logger.info(Message(f"👋 Your limit order for {symbol} is {json.dumps(order)}"))
-            responses = self.binance_api.f_order(order)
-            if "code" in responses and int(responses["code"]) < 0:
-                # Error
-                self.logger.error(Message(
-                    title=f"Error Command.flimit - {order['side']} - {order['type']} - {symbol}",
-                    body=f"Error: {responses['msg']}",
-                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                ), notification=True)
-            else:
-                await update.message.reply_text(text=f"👋 Your limit order for {symbol} is successful\n {json.dumps(order, indent=2)}")
+            batch_orders = self.f_get_limit_orders(side, symbol, leverage, margin, price, context)
+            self.logger.info(Message(f"👋 Your limit order for {symbol} is {json.dumps(batch_orders)}"))
+            responses = self.binance_api.f_batch_order(batch_orders)
+            ok = True
+            for idx in range(len(responses)):
+                if "code" in responses[idx] and int(responses[idx]["code"]) < 0:
+                    # Error
+                    self.logger.error(Message(
+                        title=f"Error Command.flimit - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
+                        body=f"Error: {responses[idx]['msg']}",
+                        chat_id=self.config.TELEGRAM_LOG_PEER_ID
+                    ), notification=True)
+                    ok = False
+            if ok:
+                await update.message.reply_text(text=f"👋 Your limit order for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}")
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.flimit - {side} - {symbol} - {leverage} - margin: ${margin} - price: ${price}",
@@ -713,7 +716,9 @@ class Command:
                 "side": "BUY" if side_upper == "SELL" else "SELL",
                 "symbol": symbol,
                 "stopPrice": context.args[4],
-                "closePosition": "true"
+                "reduceOnly": "true",
+                "timeInForce": "GTE_GTC",
+                "workingType": "MARK_PRICE"
             }
             batch_orders.append(sl_order)
         if len(context.args) > 5:
@@ -722,12 +727,14 @@ class Command:
                 "side": "BUY" if side_upper == "SELL" else "SELL",
                 "symbol": symbol,
                 "stopPrice": context.args[5],
-                "closePosition": "true"
+                "reduceOnly": "true",
+                "timeInForce": "GTE_GTC",
+                "workingType": "MARK_PRICE"
             }
             batch_orders.append(tp_order)
         return batch_orders
     
-    def f_get_limit_order(self, side: str, symbol: str, leverage: int, margin: float, price: str):
+    def f_get_limit_orders(self, side: str, symbol: str, leverage: int, margin: float, price: str, context: ContextTypes.DEFAULT_TYPE):
         pair_info = self.binance_api.f_get_symbol_info(symbol)
         quantity_precision = int(pair_info['quantityPrecision']) if pair_info else 3
         quantity = round(margin * leverage / float(price), quantity_precision)
@@ -743,6 +750,29 @@ class Command:
             "timeInForce": "GTC",
             "price": price,
         }
+        batch_orders = [order]
+        if len(context.args) > 5:
+            sl_order = {
+                "type": "STOP_MARKET",
+                "side": "BUY" if side_upper == "SELL" else "SELL",
+                "symbol": symbol,
+                "stopPrice": context.args[5],
+                "reduceOnly": "true",
+                "timeInForce": "GTE_GTC",
+                "workingType": "MARK_PRICE"
+            }
+            batch_orders.append(sl_order)
+        if len(context.args) > 6:
+            tp_order = {
+                "type": "TAKE_PROFIT_MARKET",
+                "side": "BUY" if side_upper == "SELL" else "SELL",
+                "symbol": symbol,
+                "stopPrice": context.args[6],
+                "reduceOnly": "true",
+                "timeInForce": "GTE_GTC",
+                "workingType": "MARK_PRICE"
+            }
+            batch_orders.append(tp_order)
         return order
 
     def f_get_close_positions(self, symbol: str):
