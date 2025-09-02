@@ -682,12 +682,11 @@ class Command:
         batch_orders = []
         for input in tpsl_input.split('_'):
             if "sl" in input or "tp" in input:
-                price = float(input[3:])
                 tpsl_order = {
                     "type": "STOP_MARKET" if "sl" in input else "TAKE_PROFIT_MARKET",
                     "side": "BUY" if order["side"] == "SELL" else "SELL",
                     "symbol": order["symbol"],
-                    "stopPrice": price,
+                    "stopPrice": input[3:],
                     "reduceOnly": "true",
                     "timeInForce": "GTE_GTC",
                     "workingType": "MARK_PRICE",
