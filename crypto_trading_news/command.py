@@ -62,13 +62,11 @@ class Command:
             ('help', 'Get all commands'),
             ('start', 'Get public, local IP of the server'),
             ('info', 'Get current trade, balance and pnl'),
-            ('forder', 'forder buy/sell coin leverage margin sl(opt) tp(opt)'),
+            ('forder', 'forder market/limit buy/sell coin leverage margin (optional: price_sl:price_tp:price)'),
             ('fclose', 'fclose coin'),
             ('fch', "Get chart 'fch coin interval(opt, df=15m) range(opt, df=21 * interval)'"),
             ('fp', "Get prices 'fp coin1 coin2 ....'"),
             ('fstats', "Schedule get stats 'fstats interval(seconds)'"),
-            ('flimit', 'flimit buy/sell coin leverage margin price sl(optional) tp(optional)'),
-            ('ftpsl', "Set tp/sl position 'ftpsl coin sl(optional) tp(optional)"),
             ('falert', "falert op1:coin1:price1_1,price1_2,...(:gap1, default=0.5%) ..."),
             ('falert_track', "Tracking all alert price 'falert_track intervals(seconds)'"),
             ('falert_list', "List all current alert"),
@@ -97,13 +95,11 @@ class Command:
     async def help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg = "/start - Get public, local IP of the server\n"
         msg += "/info - Get current trade, balance and pnl\n"
-        msg += "/forder - Make futures market order 'forder buy/sell coin leverage margin sl(optional) tp(optional)'\n"
+        msg += "/forder - Make futures market order 'forder market/limit buy/sell coin leverage margin (optional: price_sl:price_tp:price)'\n"
         msg += "/fclose - Close all position and open order 'fclose coin'\n"
         msg += "/fch - Get chart 'fch coin interval(optional, default=15m) range(optional, default=21 * interval)'\n"
         msg += "/fp - Get prices 'fp coin1 coin2 ....'\n"
         msg += "/fstats - Schedule get stats for current positions 'fstats interval(seconds)'\n"
-        msg += "/flimit - Make futures limit order 'flimit buy/sell coin leverage margin price sl(optional) tp(optional)'\n"
-        msg += "/ftpsl - Set tp/sl position 'ftpsl coin sl(optional) tp(optional)'\n"
         msg += "/falert - Set alert price 'falert op1:coin1:price1_1,price1_2,...(:gap1, default=0.5%) ...'\n"
         msg += "/falert_track - Tracking all alert price 'falert_track intervals(seconds)'\n"
         msg += "/falert_list - List all current alert\n"
@@ -180,67 +176,54 @@ class Command:
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
     
-    # forder buy/sell coin leverage margin sl(optional) tp(optional)
+    # forder market/limit buy/sell coin leverage margin price_sl:price_tp:price (optional)
     async def forder(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        side = context.args[0]
-        coin = context.args[1].upper()
-        leverage = int(context.args[2])
-        margin = float(context.args[3])
+        type = context.args[0]
+        side = context.args[1]
+        coin = context.args[2].upper()
+        leverage = int(context.args[3])
+        margin = float(context.args[4])
+        optional = None
+        if len(context.args) > 5:
+            optional = context.args[5]
         try:
             symbol = coin + "USDT"
             # try to change leverage and margin_type for symbol first
             self.f_set_leverage_and_margin_type(symbol, leverage)
-            batch_orders = self.f_get_orders(side, symbol, leverage, margin, context)
-            self.logger.info(Message(f"👋 Your order for {symbol} is {json.dumps(batch_orders)}"))
-            responses = self.binance_api.f_batch_order(batch_orders)
-            ok = True
-            for idx in range(len(responses)):
-                if "code" in responses[idx] and int(responses[idx]["code"]) < 0:
-                    # Error
-                    self.logger.error(Message(
-                        title=f"Error Command.forder - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
-                        body=f"Error: {responses[idx]['msg']}",
-                        chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                    ), notification=True)
-                    ok = False
-            if ok:
-                await update.message.reply_text(text=f"👋 Your order for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}")
+            # Try to send original order first, then tp/sl
+            order = self.f_get_order(type, side, symbol, leverage, margin, optional)
+            self.logger.info(Message(f"👋 Your origin order for {symbol} is {json.dumps(order)}"))
+            response_origin = self.binance_api.f_order(order)
+            if "code" in response_origin and int(response_origin["code"]) < 0:
+                # Error
+                self.logger.error(Message(
+                    title=f"Error Command.forder - {order['type']} - {order['side']} - {symbol}",
+                    body=f"Error: {response_origin['msg']}",
+                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
+                ), notification=True)
+            else:
+                batch_orders = [order]
+                ok = True
+                if optional:
+                    tpsl_orders = self.f_get_tp_sl_orders(order, tpsl_input=optional)
+                    if len(tpsl_orders) > 0:
+                        self.logger.info(Message(f"👋 Your tp/sl order for {symbol} is {json.dumps(tpsl_orders)}"))
+                        responses = self.binance_api.f_batch_order(tpsl_orders)
+                        for idx in range(len(responses)):
+                            if "code" in responses[idx] and int(responses[idx]["code"]) < 0:
+                                # Error
+                                self.logger.error(Message(
+                                    title=f"Error Command.forder - {tpsl_orders[idx]['type']} - {tpsl_orders[idx]['side']} - {symbol}",
+                                    body=f"Error: {responses[idx]['msg']}",
+                                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
+                                ), notification=True)
+                                ok = False
+                        batch_orders.extend(tpsl_orders)
+                if ok:
+                    await update.message.reply_text(text=f"👋 Your order for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}")
         except Exception as err:
             self.logger.error(Message(
-                title=f"Error Command.forder - {side} - {symbol} - {leverage} - {margin}",
-                body=f"Error: {err=}",
-                chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), notification=True)
-
-    # flimit buy/sell coin leverage margin price sl(optional) tp(optional)
-    async def flimit(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        side = context.args[0]
-        coin = context.args[1].upper()
-        leverage = int(context.args[2])
-        margin = float(context.args[3])
-        price = context.args[4]
-        try:
-            symbol = coin + "USDT"
-            # try to change leverage and margin_type for symbol first
-            self.f_set_leverage_and_margin_type(symbol, leverage)
-            batch_orders = self.f_get_limit_orders(side, symbol, leverage, margin, price, context)
-            self.logger.info(Message(f"👋 Your limit order for {symbol} is {json.dumps(batch_orders)}"))
-            responses = self.binance_api.f_batch_order(batch_orders)
-            ok = True
-            for idx in range(len(responses)):
-                if "code" in responses[idx] and int(responses[idx]["code"]) < 0:
-                    # Error
-                    self.logger.error(Message(
-                        title=f"Error Command.flimit - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
-                        body=f"Error: {responses[idx]['msg']}",
-                        chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                    ), notification=True)
-                    ok = False
-            if ok:
-                await update.message.reply_text(text=f"👋 Your limit order for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}")
-        except Exception as err:
-            self.logger.error(Message(
-                title=f"Error Command.flimit - {side} - {symbol} - {leverage} - margin: ${margin} - price: ${price}",
+                title=f"Error Command.forder - {type} - {side} - {symbol} - {leverage} - {margin}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
@@ -262,7 +245,7 @@ class Command:
                     if "code" in responses[idx] and int(responses[idx]["code"]) < 0:
                         # Error
                         self.logger.error(Message(
-                            title=f"Error Command.forder - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
+                            title=f"Error Command.fclose - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
                             body=f"Error: {responses[idx]['msg']}",
                             chat_id=self.config.TELEGRAM_LOG_PEER_ID
                         ), notification=True)
@@ -335,36 +318,6 @@ class Command:
         except Exception as err:
             self.logger.error(Message(
                 title=f"Error Command.fstats - {interval}",
-                body=f"Error: {err=}",
-                chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ), notification=True)
-    
-    # ftpsl coin sl(optional) tp(optional)
-    async def ftpsl(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        coin = context.args[0].upper()
-        try:
-            symbol = coin + "USDT"
-            batch_orders = self.f_get_tp_sl_orders(symbol, context)
-            if len(batch_orders) > 0:
-                self.logger.info(Message(f"👋 Your tp/sl positions for {symbol} is {json.dumps(batch_orders)}"))
-                responses = self.binance_api.f_batch_order(batch_orders)
-                ok = True
-                for idx in range(len(responses)):
-                    if "code" in responses[idx] and int(responses[idx]["code"]) < 0:
-                        # Error
-                        self.logger.error(Message(
-                            title=f"Error Command.ftpsl - {batch_orders[idx]['side']} - {batch_orders[idx]['type']} - {symbol}",
-                            body=f"Error: {responses[idx]['msg']}",
-                            chat_id=self.config.TELEGRAM_LOG_PEER_ID
-                        ), notification=True)
-                        ok = False
-                if ok:
-                    await update.message.reply_text(text=f"👋 Your tp/sl order for {symbol} is successful\n {json.dumps(batch_orders, indent=2)}")
-            else:
-                await update.message.reply_text(text=f"👋 Not found position for {symbol}!")
-        except Exception as err:
-            self.logger.error(Message(
-                title=f"Error Command.ftpsl - {symbol}",
                 body=f"Error: {err=}",
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
@@ -694,89 +647,53 @@ class Command:
         info += f"**After Total Balance**: **${float(account_info['totalMarginBalance']):.2f}**"
         return (info, round(float(account_info['totalUnrealizedProfit']) / float(account_info['totalWalletBalance']) * 100, 2), round(float(account_info['totalUnrealizedProfit']), 2))
     
-    def f_get_orders(self, side: str, symbol: str, leverage: int, margin: float, context: ContextTypes.DEFAULT_TYPE):
-        price = self.binance_api.f_price(symbol)
+    def f_gen_order(self, type_upper: str, side_upper: str, symbol: str, leverage: int, margin: float, price: float):
         pair_info = self.binance_api.f_get_symbol_info(symbol)
         quantity_precision = int(pair_info['quantityPrecision']) if pair_info else 3
         quantity = round(margin * leverage / price, quantity_precision)
-        if 'b' in side:
-            side_upper = "BUY"
-        else:
-            side_upper = "SELL"
         order = {
-            "type": "MARKET",
+            "type": type_upper,
             "side": side_upper,
             "symbol": symbol,
             "quantity": str(quantity)
         }
-        batch_orders = [order]
-        if len(context.args) > 4:
-            sl_order = {
-                "type": "STOP_MARKET",
-                "side": "BUY" if side_upper == "SELL" else "SELL",
-                "symbol": symbol,
-                "stopPrice": context.args[4],
-                "reduceOnly": "true",
-                "timeInForce": "GTE_GTC",
-                "workingType": "MARK_PRICE",
-                "quantity": str(quantity)
-            }
-            batch_orders.append(sl_order)
-        if len(context.args) > 5:
-            tp_order = {
-                "type": "TAKE_PROFIT_MARKET",
-                "side": "BUY" if side_upper == "SELL" else "SELL",
-                "symbol": symbol,
-                "stopPrice": context.args[5],
-                "reduceOnly": "true",
-                "timeInForce": "GTE_GTC",
-                "workingType": "MARK_PRICE",
-                "quantity": str(quantity)
-            }
-            batch_orders.append(tp_order)
-        return batch_orders
-    
-    def f_get_limit_orders(self, side: str, symbol: str, leverage: int, margin: float, price: str, context: ContextTypes.DEFAULT_TYPE):
-        pair_info = self.binance_api.f_get_symbol_info(symbol)
-        quantity_precision = int(pair_info['quantityPrecision']) if pair_info else 3
-        quantity = round(margin * leverage / float(price), quantity_precision)
+        if side_upper == "LIMIT":
+            order["timeInForce"] = "GTC"
+            order["price"] = str(price)
+        return order
+
+    # market/limit buy/sell coin leverage margin price_sl:price_tp:price (optional)
+    def f_get_order(self, type: str, side: str, symbol: str, leverage: int, margin: float, optional: str | None):
+        price = self.binance_api.f_price(symbol)
         if 'b' in side:
             side_upper = "BUY"
         else:
             side_upper = "SELL"
-        order = {
-            "symbol": symbol,
-            "side": side_upper,
-            "quantity": str(quantity),
-            "type": "LIMIT",
-            "timeInForce": "GTC",
-            "price": str(price),
-        }
-        batch_orders = [order]
-        if len(context.args) > 5:
-            sl_order = {
-                "type": "STOP_MARKET",
-                "side": "BUY" if side_upper == "SELL" else "SELL",
-                "symbol": symbol,
-                "stopPrice": context.args[5],
-                "reduceOnly": "true",
-                "timeInForce": "GTE_GTC",
-                "workingType": "MARK_PRICE",
-                "quantity": str(quantity)
-            }
-            batch_orders.append(sl_order)
-        if len(context.args) > 6:
-            tp_order = {
-                "type": "TAKE_PROFIT_MARKET",
-                "side": "BUY" if side_upper == "SELL" else "SELL",
-                "symbol": symbol,
-                "stopPrice": context.args[6],
-                "reduceOnly": "true",
-                "timeInForce": "GTE_GTC",
-                "workingType": "MARK_PRICE",
-                "quantity": str(quantity)
-            }
-            batch_orders.append(tp_order)
+        if 'l' in type.lower():
+            type_upper = "LIMIT"
+            price = float(optional.split('_')[0])
+        else:
+            type_upper = "MARKET"
+            price = self.binance_api.f_price(symbol)
+        return self.f_gen_order(type_upper, side_upper, symbol, leverage, margin, price)
+    
+    # tpsl format: price_sl:price_tp:price
+    def f_get_tp_sl_orders(self, order: dict[str, str], tpsl_input: str):
+        batch_orders = []
+        for input in tpsl_input.split('_'):
+            if "sl" in input or "tp" in input:
+                price = float(input[3:])
+                tpsl_order = {
+                    "type": "STOP_MARKET" if "sl" in input else "TAKE_PROFIT_MARKET",
+                    "side": "BUY" if order["side"] == "SELL" else "SELL",
+                    "symbol": order["symbol"],
+                    "stopPrice": price,
+                    "reduceOnly": "true",
+                    "timeInForce": "GTE_GTC",
+                    "workingType": "MARK_PRICE",
+                    "quantity": order["quantity"]
+                }
+                batch_orders.append(tpsl_order)
         return batch_orders
 
     def f_get_close_positions(self, symbol: str):
@@ -797,35 +714,6 @@ class Command:
             batch_orders.append(close_order)
         return batch_orders
     
-    def f_get_tp_sl_orders(self, symbol: str, context: ContextTypes.DEFAULT_TYPE):
-        positions = self.binance_api.get_current_position(symbol=symbol)
-        batch_orders = []
-        for position in positions:
-            amount = float(position["positionAmt"])
-            if amount > 0:
-                side_upper = "BUY"
-            else:
-                side_upper = "SELL"
-            if len(context.args) > 1:
-                sl_order = {
-                    "type": "STOP_MARKET",
-                    "side": "BUY" if side_upper == "SELL" else "SELL",
-                    "symbol": symbol,
-                    "stopPrice": context.args[1],
-                    "closePosition": "true"
-                }
-                batch_orders.append(sl_order)
-            if len(context.args) > 2:
-                tp_order = {
-                    "type": "TAKE_PROFIT_MARKET",
-                    "side": "BUY" if side_upper == "SELL" else "SELL",
-                    "symbol": symbol,
-                    "stopPrice": context.args[2],
-                    "closePosition": "true"
-                }
-                batch_orders.append(tp_order)
-        return batch_orders
-
     def generate_chart(self, type: str, symbol: str, data: list, interval: str):
         for line in data:
             del line[6:]

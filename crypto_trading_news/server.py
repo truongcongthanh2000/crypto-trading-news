@@ -34,8 +34,6 @@ async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twi
     application.add_handler(CommandHandler("fch", command.fchart))
     application.add_handler(CommandHandler("fp", command.fprices))
     application.add_handler(CommandHandler("fstats", command.fstats))
-    application.add_handler(CommandHandler("flimit", command.flimit))
-    application.add_handler(CommandHandler("ftpsl", command.ftpsl))
     application.add_handler(CommandHandler("falert", command.falert))
     application.add_handler(CommandHandler("falert_track", command.falert_track))
     application.add_handler(CommandHandler("falert_list", command.falert_list))
