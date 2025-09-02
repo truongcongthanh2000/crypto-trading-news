@@ -657,7 +657,7 @@ class Command:
             "symbol": symbol,
             "quantity": str(quantity)
         }
-        if side_upper == "LIMIT":
+        if type_upper == "LIMIT":
             order["timeInForce"] = "GTC"
             order["price"] = str(price)
         return order
