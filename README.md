@@ -3,7 +3,7 @@
 This project contains **two complementary tools** for cryptocurrency and financial markets:
 
 1. **Social Trading News Crawler Bot** – Automatically collects and organizes market news from multiple online sources.  
-2. **Command Trading Bot** – A CLI-based trading bot for automating cryptocurrency trades.
+2. **Command Trading Bot** – A CLI-based trading bot for automating cryptocurrency trades. 
 
 ---
 
