@@ -4,9 +4,12 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+  schedule:
+    - cron: "0 20 * * *"   # Run daily at 20:00 UTC (3AM UTC+7)
 
 jobs:
   build:
+    if: github.event_name != 'schedule'   # only run on push or manual
     runs-on: self-hosted
     environment: production
 
@@ -38,9 +41,21 @@ jobs:
           echo "TOR_PROXY_NUM_PORTS=$TOR_PROXY_NUM_PORTS" >> .env
           echo "TWITTER_COOKIES=$TWITTER_COOKIES" >> .env
 
-      - name: Trigger with PM2
+      - name: Start with PM2
         working-directory: ${{ github.workspace }}
         run: |
           pm2 delete all || true
           RUNNER_TRACKING_ID="" NUM_PORTS=${TOR_PROXY_NUM_PORTS:-1} MAX_CIRCUIT=${MAX_CIRCUIT_DIRTINESS:-600} pm2 start ecosystem.config.js
+          pm2 save
+
+  restart:
+    if: github.event_name == 'schedule'   # only run on cron schedule
+    runs-on: self-hosted
+    environment: production
+
+    steps:
+      - name: Restart PM2 apps
+        run: |
+          echo "Restarting apps via PM2..."
+          pm2 restart all || true
           pm2 save
