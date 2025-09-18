@@ -1,7 +1,7 @@
 from .logger import Logger
 from .config import Config
 from .notification import Message
-from telethon import TelegramClient
+from telethon import TelegramClient, types
 from telethon.sessions import StringSession
 import asyncio
 from datetime import datetime, timedelta, timezone
@@ -13,15 +13,21 @@ class Telegram:
         self.logger = logger
         self.client = TelegramClient(StringSession(config.TELEGRAM_SESSION_STRING), config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH, proxy=config.TELEGRAM_PROXY.telethon_proxy)
         self.map_offset_date = {}
+        self.channels = []
 
     async def connect(self):
         await self.client.start()
+        for channel in self.config.TELEGRAM_LIST_CHANNEL:
+            if channel[0] != '@':
+                self.channels.append(await self.client.get_entity(types.PeerChannel(int(channel))))
+            else:
+                self.channels.append(await self.client.get_entity(channel))
 
-    async def pull_messages(self, channel: str):
+    async def pull_messages(self, channel: types.Channel):
         async def get_messages():
             offset_date = datetime.now(tz=timezone.utc) - timedelta(seconds = self.config.TELEGRAM_SLA)    
-            if channel in self.map_offset_date:
-                offset_date = self.map_offset_date[channel]
+            if channel.id in self.map_offset_date:
+                offset_date = self.map_offset_date[channel.id]
             result = []
             async for msg in self.client.iter_messages(channel, limit=self.config.TELEGRAM_LIMIT):
                 if msg.date <= offset_date:
@@ -32,35 +38,43 @@ class Telegram:
             messages = await get_messages()
         except Exception as err:
             self.logger.error(Message(
-                title=f"Error Telegram.scrape_messages - {channel}",
+                title=f"Error Telegram.pull_messages - {channel.title} - {channel.id}",
                 body=f"Error: {err=}", 
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
             messages = []
         if len(messages) > 0:
-            self.map_offset_date[channel] = messages[0].date
+            self.map_offset_date[channel.id] = messages[0].date
         return messages
     
-    async def forward_messages(self, channel):
+    async def forward_messages(self, channel: types.Channel):
+        def send_message(messages, channel_id):
+            for message in messages:
+                body = message.message
+                url = f"https://t.me/{channel.id}/{message.id}"
+                if channel.username is not None:
+                    url = f"https://t.me/{channel.username}/{message.id}"
+                body += f"\n\n**[Link: {url}]({url})**"
+                self.logger.info(Message(
+                    title= f"Telegram - {channel.title} - Time: {message.date.astimezone(pytz.timezone(self.config.TIMEZONE))}",
+                    body=body,
+                    chat_id=channel_id
+                ), notification=True)
         async def forward(messages, channel_id):
             if len(messages) == 0:
+                return
+            if channel.noforwards:
+                send_message(messages, channel_id)
                 return
             try:
                 await self.client.forward_messages(channel_id, messages)
             except Exception as err:
                 self.logger.error(Message(
-                    title=f"Error Telegram.forward_messages - {channel}",
+                    title=f"Error Telegram.forward_messages - {channel.title} - {channel.id}",
                     body=f"Error: {err=}", 
                     chat_id=self.config.TELEGRAM_LOG_PEER_ID
                 ))
-                for message in messages:
-                    body = message.message
-                    body += f"\n\n**[Link: https://t.me/{channel[1:]}/{message.id}](https://t.me/{channel[1:]}/{message.id})**"
-                    self.logger.info(Message(
-                        title= f"Telegram - {channel} - Time: {message.date.astimezone(pytz.timezone(self.config.TIMEZONE))}",
-                        body=body,
-                        chat_id=channel_id
-                    ), notification=True)
+                send_message(messages, channel_id)
                 await asyncio.sleep(1)
         messages = await self.pull_messages(channel)
         messages_news = []
@@ -75,7 +89,7 @@ class Telegram:
             await forward(messages_news, self.config.TELEGRAM_NEWS_PEER_ID)
         except Exception as err:
             self.logger.error(Message(
-                title=f"Error Telegram.forward_messages - {channel}",
+                title=f"Error Telegram.forward_messages - {channel.title} - {channel.id}",
                 body=f"Error: {err=}", 
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ), notification=True)
@@ -87,7 +101,7 @@ class Telegram:
         # Prepare all tasks concurrently
         tasks = [
             self.forward_messages(channel)
-            for channel in self.config.TELEGRAM_LIST_CHANNEL
+            for channel in self.channels
         ]
 
         # Run all profile scrapes in parallel
