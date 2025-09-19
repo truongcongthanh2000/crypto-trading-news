@@ -44,7 +44,7 @@ jobs:
       - name: Start with PM2
         working-directory: ${{ github.workspace }}
         run: |
-          pm2 delete all --namespace crypto-news || true
+          pm2 delete crypto-news || true
           RUNNER_TRACKING_ID="" NUM_PORTS=${TOR_PROXY_NUM_PORTS:-1} MAX_CIRCUIT=${MAX_CIRCUIT_DIRTINESS:-600} \
             pm2 start ecosystem.config.js --only tor-multi,crypto-trading-news --namespace crypto-news
           pm2 save --namespace crypto-news
@@ -58,5 +58,5 @@ jobs:
       - name: Restart PM2 apps
         run: |
           echo "Restarting apps via PM2..."
-          pm2 restart all --namespace crypto-news || true
+          pm2 restart crypto-news || true
           pm2 save --namespace crypto-news
