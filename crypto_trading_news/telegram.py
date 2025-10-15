@@ -19,19 +19,19 @@ class Telegram:
         await self.client.start()
         for channel in self.config.TELEGRAM_LIST_CHANNEL:
             if channel[0] != '@':
-                self.channels.append(await self.client.get_entity(types.PeerChannel(int(channel))))
+                channel_v = await self.client.get_entity(types.PeerChannel(int(channel)))
             else:
-                self.channels.append(await self.client.get_entity(channel))
+                channel_v = await self.client.get_entity(channel)
+            self.channels.append(channel_v)
+            self.map_offset_date[channel_v.id] = datetime.now(tz=timezone.utc) - timedelta(seconds = self.config.TELEGRAM_SLA)
 
     async def pull_messages(self, channel: types.Channel):
         async def get_messages():
-            offset_date = datetime.now(tz=timezone.utc) - timedelta(seconds = self.config.TELEGRAM_SLA)    
-            if channel.id in self.map_offset_date:
-                offset_date = self.map_offset_date[channel.id]
+            offset_date = self.map_offset_date[channel.id]
             result = []
             async for msg in self.client.iter_messages(channel, limit=self.config.TELEGRAM_LIMIT):
-                if msg.date <= offset_date:
-                    return result
+                if msg.date <= offset_date and (msg.edit_date is None or msg.edit_date <= offset_date):
+                    continue
                 result.append(msg)
             return result
         try:
@@ -44,7 +44,12 @@ class Telegram:
             ), notification=True)
             messages = []
         if len(messages) > 0:
-            self.map_offset_date[channel.id] = messages[0].date
+            for message in messages:
+                date = message.date
+                if message.edit_date is not None:
+                    date = message.edit_date
+                if date > self.map_offset_date[channel.id]:
+                    self.map_offset_date[channel.id] = date
         return messages
     
     async def forward_messages(self, channel: types.Channel):
