@@ -30,6 +30,7 @@ class Telegram:
         @self.client.on(events.NewMessage(chats=[c.id for c in self.channels]))
         async def handler_new(event: events.NewMessage.Event):
             message = event.message
+            self.logger.info(f"Debug handler_new, text: {message.message}, id: {message.id}")
             channel = await event.get_chat()
             await self.handle_message(channel, message)
 
@@ -37,6 +38,7 @@ class Telegram:
         @self.client.on(events.MessageEdited(chats=[c.id for c in self.channels]))
         async def handler_edit(event: events.MessageEdited.Event):
             message = event.message
+            self.logger.info(f"Debug handler_edit, text: {message.message}, id: {message.id}")
             channel = await event.get_chat()
             await self.handle_message(channel, message, edited=True)
 
@@ -82,6 +84,5 @@ class Telegram:
             ))
 
     async def run_forever(self):
-        await self.connect()
         self.logger.info(Message("Telegram event loop started"))
         await self.client.run_until_disconnected()
