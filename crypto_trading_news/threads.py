@@ -122,11 +122,12 @@ class Threads:
                     parsed['threads'].extend(parse_thread_items)
                         
         except Exception as err:
-            self.logger.error(Message(
-                title=f"Error Threads.scrape_thread - url={url}",
-                body=f"Error: {err=}", 
-                chat_id=self.config.TELEGRAM_LOG_PEER_ID
-            ))
+            pass
+            # self.logger.error(Message(
+            #     title=f"Error Threads.scrape_thread - url={url}",
+            #     body=f"Error: {err=}", 
+            #     chat_id=self.config.TELEGRAM_LOG_PEER_ID
+            # ))
         finally:
             if page:
                 await page.close()
