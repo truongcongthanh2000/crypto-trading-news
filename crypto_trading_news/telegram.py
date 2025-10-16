@@ -3,15 +3,19 @@ from .config import Config
 from .notification import Message
 from telethon import TelegramClient, events, types
 from telethon.sessions import StringSession
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
+import asyncio
 import pytz
 from .util import is_command_trade
 class Telegram:
+    TTL_SECONDS = 3600  # for example: 1 hour TTL for cache
+
     def __init__(self, config: Config, logger: Logger):
         self.config = config
         self.logger = logger
         self.client = TelegramClient(StringSession(config.TELEGRAM_SESSION_STRING), config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH, proxy=config.TELEGRAM_PROXY.telethon_proxy)
         self.channels = []
+        self.map_latest_text = {}
 
     async def connect(self):
         await self.client.start()
@@ -30,24 +34,54 @@ class Telegram:
         @self.client.on(events.NewMessage(chats=[c.id for c in self.channels]))
         async def handler_new(event: events.NewMessage.Event):
             message = event.message
-            print("Debug handler_new ", event)
-            self.logger.info(f"Debug handler_new, text: {message.message}, id: {message.id}")
-            channel = await event.get_chat()
+            channel = await event.get_chat()            
             await self.handle_message(channel, message)
 
         # Handle edits (optional)
         @self.client.on(events.MessageEdited(chats=[c.id for c in self.channels]))
         async def handler_edit(event: events.MessageEdited.Event):
             message = event.message
-            print("Debug handler_edit ", event)
-            self.logger.info(f"Debug handler_edit, text: {message.message}, id: {message.id}")
             channel = await event.get_chat()
             await self.handle_message(channel, message, edited=True)
+
+    async def cleanup_map_latest_text(self):
+        """Periodically clean up old entries from map_latest_text"""
+        while True:
+            try:
+                now = datetime.now(tz=timezone.utc)
+                expired_keys = [
+                    k for k, (_, ts) in self.map_latest_text.items()
+                    if (now - ts).total_seconds() > self.TTL_SECONDS
+                ]
+                for k in expired_keys:
+                    del self.map_latest_text[k]
+                if expired_keys:
+                    self.logger.info(f"Cleaned {len(expired_keys)} expired Telegram cache entries")
+            except Exception as err:
+                self.logger.error(Message(
+                    title="Error cleaning map_latest_text",
+                    body=f"Error: {err}",
+                    chat_id=self.config.TELEGRAM_LOG_PEER_ID
+                ))
+            await asyncio.sleep(300)  # cleanup every 5 minutes
 
     async def handle_message(self, channel, message, edited=False):
         """Handles forwarding or logging of a single message."""
         try:
             body = message.message or ""
+            # No handle message same as previous
+            key = f"{channel.id}_{message.id}"
+            now = datetime.now(tz=timezone.utc)
+
+            # Skip if same as last text
+            if key in self.map_latest_text:
+                last_text, _ = self.map_latest_text[key]
+                if last_text == body:
+                    return
+
+            # Update cache with new text + timestamp
+            self.map_latest_text[key] = (body, now)
+
             url = f"https://t.me/{channel.id}/{message.id}"
             if channel.username:
                 url = f"https://t.me/{channel.username}/{message.id}"

@@ -52,6 +52,7 @@ async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twi
         await asyncio.gather(
             application.updater.start_polling(),
             notification.process_queue(),
+            telegram.cleanup_map_latest_text(),
             telegram.run_forever(),
         )
 
