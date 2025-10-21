@@ -18,6 +18,7 @@ async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twi
     #         scheduler.add_job(threads.retrieve_user_posts, 'interval', seconds=config.THREADS_SCRAPE_SLEEP_TIME, id=f"threads-{username}", args=[username])
     scheduler.add_job(threads.scrape_user_posts, 'interval', seconds=config.THREADS_SCRAPE_SLEEP_TIME, id="threads")
     scheduler.add_job(twitter.scrape_user_tweets, 'interval', seconds=config.TWITTER_SCRAPE_SLEEP_TIME, id="twitter")
+    scheduler.add_job(telegram.scrape_channel_messages, 'interval', seconds=config.TELEGRAM_SCRAPE_SLEEP_TIME, id="telegram")
     scheduler.add_job(discord.scrape_channel_messages, 'interval', seconds=config.DISCORD_SCRAPE_SLEEP_TIME, id="discord")
     scheduler.start()
 
@@ -53,7 +54,6 @@ async def run_all(logger: Logger, config: Config, threads: Threads, twitter: Twi
             application.updater.start_polling(),
             notification.process_queue(),
             telegram.cleanup_map_latest_text(),
-            telegram.run_forever(),
         )
 
         await application.updater.stop()

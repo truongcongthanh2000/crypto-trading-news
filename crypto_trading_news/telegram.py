@@ -1,9 +1,9 @@
 from .logger import Logger
 from .config import Config
 from .notification import Message
-from telethon import TelegramClient, events, types
+from telethon import TelegramClient, types
 from telethon.sessions import StringSession
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import asyncio
 import pytz
 from .util import is_command_trade
@@ -16,7 +16,36 @@ class Telegram:
         self.client = TelegramClient(StringSession(config.TELEGRAM_SESSION_STRING), config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH, proxy=config.TELEGRAM_PROXY.telethon_proxy)
         self.channels = []
         self.map_latest_text = {}
+        self.map_offset_date = {}
 
+    async def pull_messages(self, channel: types.Channel):
+        async def get_messages():
+            offset_date = self.map_offset_date[channel.id]
+            result = []
+            async for msg in self.client.iter_messages(channel, limit=self.config.TELEGRAM_LIMIT):
+                if msg.date <= offset_date and (msg.edit_date is None or msg.edit_date <= offset_date):
+                    continue
+                result.append(msg)
+            return result
+        try:
+            messages = await get_messages()
+            if len(messages) > 0:
+                for message in messages:
+                    date = message.date
+                    if message.edit_date is not None:
+                        date = message.edit_date
+                    if date > self.map_offset_date[channel.id]:
+                        self.map_offset_date[channel.id] = date
+                    await self.handle_message(channel, message)
+        except Exception as err:
+            self.logger.error(Message(
+                title=f"Error Telegram.pull_messages - {channel.title} - {channel.id}",
+                body=f"Error: {err=}", 
+                chat_id=self.config.TELEGRAM_LOG_PEER_ID
+            ), notification=True)
+            messages = []
+        return messages
+    
     async def connect(self):
         await self.client.start()
         for channel in self.config.TELEGRAM_LIST_CHANNEL:
@@ -25,24 +54,7 @@ class Telegram:
             else:
                 channel_v = await self.client.get_entity(channel)
             self.channels.append(channel_v)
-        # Register handlers after connecting
-        self._register_handlers()
-        self.logger.info(Message("Telegram connected and event handlers registered"))
-
-    def _register_handlers(self):
-        # Handle new messages
-        @self.client.on(events.NewMessage(chats=[c.id for c in self.channels]))
-        async def handler_new(event: events.NewMessage.Event):
-            message = event.message
-            channel = await event.get_chat()            
-            await self.handle_message(channel, message)
-
-        # Handle edits (optional)
-        @self.client.on(events.MessageEdited(chats=[c.id for c in self.channels]))
-        async def handler_edit(event: events.MessageEdited.Event):
-            message = event.message
-            channel = await event.get_chat()
-            await self.handle_message(channel, message, edited=True)
+            self.map_offset_date[channel_v.id] = datetime.now(tz=timezone.utc) - timedelta(seconds = self.config.TELEGRAM_SLA)
 
     async def cleanup_map_latest_text(self):
         """Periodically clean up old entries from map_latest_text"""
@@ -65,7 +77,7 @@ class Telegram:
                 ))
             await asyncio.sleep(300)  # cleanup every 5 minutes
 
-    async def handle_message(self, channel, message, edited=False):
+    async def handle_message(self, channel: types.Channel, message: types.Message):
         """Handles forwarding or logging of a single message."""
         try:
             body = message.message or ""
@@ -87,8 +99,6 @@ class Telegram:
                 url = f"https://t.me/{channel.username}/{message.id}"
             body += f"\n\n**[Link: {url}]({url})**"
             title = f"Telegram - {channel.title} - Time: {message.date.astimezone(pytz.timezone(self.config.TIMEZONE))}"
-            if edited:
-                title += " (Edited)"
 
             # Split logic: trade vs news
             if is_command_trade(body):
@@ -119,6 +129,15 @@ class Telegram:
                 chat_id=self.config.TELEGRAM_LOG_PEER_ID
             ))
 
-    async def run_forever(self):
-        self.logger.info(Message("Telegram event loop started"))
-        await self.client.run_until_disconnected()
+    async def scrape_channel_messages(self):
+        if self.config.TELEGRAM_ENABLED == False:
+            return
+        # self.logger.info(Message(f"Telegram.scrape_channel_messages with list channel: {', '.join(self.config.TELEGRAM_LIST_CHANNEL)}"))
+        # Prepare all tasks concurrently
+        tasks = [
+            self.pull_messages(channel)
+            for channel in self.channels
+        ]
+
+        # Run all profile scrapes in parallel
+        await asyncio.gather(*tasks)
