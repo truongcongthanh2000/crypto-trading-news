@@ -83,7 +83,7 @@ class Command:
             msg += f"**Your server public IP is `{public_ip}`, here is list commands:**\n"
             for command in commands:
                 msg += f"/{command.command} - {command.description}\n"
-            msg += json.dumps(self.config.beautify(), indent=2)
+            msg += f"```\n{json.dumps(self.config.beautify(), indent=2)}"
             await application.bot.send_message(self.config.TELEGRAM_LOG_PEER_ID, text=telegramify_markdown.markdownify(msg), parse_mode=ParseMode.MARKDOWN_V2, link_preview_options=LinkPreviewOptions(is_disabled=True))
         except Exception as err:
             self.logger.error(Message(
