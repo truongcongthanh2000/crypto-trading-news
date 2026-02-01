@@ -1,4 +1,4 @@
-# 📈 Social Trading News Crawler & Command Trading Bot
+# 📈 Social Trading News Crawler & Command Trading Bot 
 
 This project contains **two complementary tools** for cryptocurrency and financial markets:
 
